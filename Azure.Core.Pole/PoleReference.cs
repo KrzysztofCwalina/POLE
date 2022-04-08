@@ -4,13 +4,9 @@ using System.Runtime.InteropServices;
 
 namespace Azure.Core.Pole
 {
-    [StructLayout(LayoutKind.Explicit)]
     public readonly struct PoleReference
     {
-        [FieldOffset(0)]
         readonly int _address;
-
-        [FieldOffset(8)]
         readonly PoleHeap _heap;
 
         public PoleReference(PoleHeap heap, int address) : this()

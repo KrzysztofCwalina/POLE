@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 
 namespace Azure.Core.Pole.TestModels
 {
-    [StructLayout(LayoutKind.Explicit)]
     public struct FooModel : IObject
     {
         const int FooOffset = 0;                        // int
@@ -13,7 +12,6 @@ namespace Azure.Core.Pole.TestModels
         const int BagOffset = BazOffset + sizeof(int);  // object
         const int Size = BagOffset + sizeof(int);
 
-        [FieldOffset(0)]
         readonly PoleReference _reference;
 
         public static FooModel Allocate(PoleHeap heap) => new (heap.Allocate(FooModel.Size));
@@ -48,7 +46,6 @@ namespace Azure.Core.Pole.TestModels
         }
     }
 
-    [StructLayout(LayoutKind.Sequential)]
     public readonly struct BazModel : IObject
     {
         const int batOffset = 0; // bool
