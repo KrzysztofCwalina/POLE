@@ -3,7 +3,7 @@
 POLE is a format for encoding object graphs similar to JSON, but: 
 
 - serialization and deserialization are close to zero-alloc, just write/read bytes into/from byte buffers
-- serialization is close to zero work, i.e. POLE objects have no data fields that need to be serialized; their "fields" *are* the output buffer
+- serialization is close to zero work, i.e. POLE objects have no data fields that need to be serialized; their "fields" *are* in the output buffer
 - deserialization is close to zero work, i.e. POLE payload is exatly the memory representation of the POLE object graph
 - deserializer can read from a sequence of buffers, as opposed to a single contiquous buffer. This enables efficient transimssion without buffer resize-copy.
 - deserialized object graphs can be all structs, i.e. no heap allocations, but the structs have natural (easy to use) reference semantics
