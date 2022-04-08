@@ -1,0 +1,5 @@
+support for arrays
+support for buffers (Span<byte>)
+support for converting from JSON
+versioning
+type safety
