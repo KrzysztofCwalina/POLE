@@ -52,7 +52,6 @@ Assert.AreEqual(29, stream.Length);
 
 ## Model Design
 ```csharp
-[StructLayout(LayoutKind.Explicit)]
 public struct HelloModel : IObject
 {
     const int RepeatCountOffset = 0;                              // int
@@ -60,7 +59,6 @@ public struct HelloModel : IObject
     const int MessageOffset = IsEnabledOffset + sizeof(byte);     // string
     const int Size = MessageOffset + sizeof(int);
 
-    [FieldOffset(0)]
     readonly PoleReference _reference;
 
     public static HelloModel Allocate(PoleHeap heap) => new (heap.Allocate(HelloModel.Size));
@@ -92,13 +90,9 @@ public struct HelloModel : IObject
 
 ## PoleReference
 ```csharp
-[StructLayout(LayoutKind.Explicit)]
 public readonly struct PoleReference
 {
-    [FieldOffset(0)]
     readonly int _address;
-
-    [FieldOffset(8)]
     readonly PoleHeap _heap;
 
     public PoleReference(PoleHeap heap, int address) : this()
