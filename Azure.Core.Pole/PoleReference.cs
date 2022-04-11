@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers.Binary;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Azure.Core.Pole
@@ -18,6 +19,8 @@ namespace Azure.Core.Pole
         internal int Address => _address;
         internal PoleHeap Heap => _heap;
         
+        public bool IsNull => _address == 0;
+
         public int ReadInt32(int offset) => BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset));
         public void WriteInt32(int offset, int value) => BinaryPrimitives.WriteInt32LittleEndian(_heap.GetBytes(_address + offset), value);
         public bool ReadBoolean(int offset) => _heap[_address + offset] != 0;
@@ -25,6 +28,8 @@ namespace Azure.Core.Pole
         public PoleReference ReadReference(int offset) => new PoleReference(_heap, BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset)));
         public void WriteReference(int offset, PoleReference reference)
         {
+            PoleReference existing = ReadReference(offset);
+            if (!existing.IsNull) throw new InvalidOperationException("model property can be assigned only once");
             if (!ReferenceEquals(this._heap, reference._heap)) throw new InvalidOperationException("Cross-heap references are not supported");
             BinaryPrimitives.WriteInt32LittleEndian(_heap.GetBytes(_address + offset), reference._address);
         }
