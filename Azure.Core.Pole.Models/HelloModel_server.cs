@@ -1,7 +1,7 @@
 ﻿using Azure.Core.Pole;
 using System;
 
-namespace Azure.Core.Pole.TestModels
+namespace Azure.Core.Pole.TestModels.Server
 {
     public struct HelloModel : IObject
     {
@@ -21,18 +21,22 @@ namespace Azure.Core.Pole.TestModels
         public int RepeatCount
         {
             get => _reference.ReadInt32(RepeatCountOffset);
+            set => _reference.WriteInt32(RepeatCountOffset, value);
         }
         public bool IsEnabled
         {
             get => _reference.ReadBoolean(IsEnabledOffset);
+            set => _reference.WriteBoolean(IsEnabledOffset, value);
         }
         public Utf8 Message
         {
             get => _reference.ReadUtf8(MessageOffset);
+            set => _reference.WriteUtf8(MessageOffset, value);
         }
         public string Title
         {
             get => _reference.ReadString(TitleOffset);
+            set => _reference.WriteString(TitleOffset, value);
         }
     }
 }

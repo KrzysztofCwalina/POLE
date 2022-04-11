@@ -13,7 +13,7 @@ namespace Azure.Core.Pole.Tests
         {
             var generator = new PoleGenerator();
             var stream = File.OpenWrite("model.cs");
-            generator.Generate<HelloModel>(stream);
+            generator.Generate<HelloModel>(stream, serverSide: true);
             stream.Close();
         }
     }

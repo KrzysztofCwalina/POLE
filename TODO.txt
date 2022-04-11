@@ -1,4 +1,3 @@
-what to do when a model property is assigned twice?
 support both output and input (with ctors) models
 support for arrays
 support dictionaries

@@ -5,12 +5,15 @@ namespace Azure.Core.Pole.Tooling
 {
     public class PoleGenerator
     {
-        public void Generate<T>(Stream stream)
+        public void Generate<T>(Stream stream, bool serverSide = false)
         {
             var type = typeof(T);
             if (!type.Namespace.EndsWith("Definitions")) throw new NotSupportedException();
             var modelNamespace = type.Namespace.Substring(0, type.Namespace.Length - ".Definitions".Length);
-
+            if (serverSide)
+            {
+                modelNamespace += ".Server";
+            }
             var writer = new StreamWriter(stream);
 
             string indent = "";
@@ -53,7 +56,11 @@ namespace Azure.Core.Pole.Tooling
                 indent += "    ";
 
                 writer.WriteLine($"{indent}get => _reference.Read{GetTypeName(property.PropertyType)}({property.Name}Offset);");
-                writer.WriteLine($"{indent}set => _reference.Write{GetTypeName(property.PropertyType)}({property.Name}Offset, value);");
+
+                if (serverSide)
+                {
+                    writer.WriteLine($"{indent}set => _reference.Write{GetTypeName(property.PropertyType)}({property.Name}Offset, value);");
+                }
 
                 indent = indent.Substring(4);
                 writer.WriteLine($"{indent}}}");

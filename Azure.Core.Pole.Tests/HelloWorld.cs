@@ -25,7 +25,7 @@ namespace Azure.Core.Pole.Tests
             // write to stream
             {
                 using PoleHeap heap = new PoleHeap(); // the heap rents buffers from a pool
-                HelloModel hello = HelloModel.Allocate(heap); // this does not actually allocate anthing on the GC heap.
+                TestModels.Server.HelloModel hello = TestModels.Server.HelloModel.Allocate(heap); // this does not actually allocate anthing on the GC heap.
                 hello.Message = Utf8.Allocate(heap, "Hello World!"); // this does not actually allocate anthing on the GC heap.
                 hello.RepeatCount = 5;
                 SetIsEnabled(hello, true); // hello is a struct (no alloc), but has reference semantics, e.g. can passed to methods that mutate
@@ -35,7 +35,7 @@ namespace Azure.Core.Pole.Tests
                 heap.WriteTo(stream);
 
                 // local method just to illustrate that POLE objects (structs) can be passed just like reference types
-                void SetIsEnabled(HelloModel hello, bool value) => hello.IsEnabled = value;
+                void SetIsEnabled(TestModels.Server.HelloModel hello, bool value) => hello.IsEnabled = value;
             } // heap buffers are returned to the buffer pool here
 
             Assert.AreEqual(55, stream.Length);
@@ -46,7 +46,7 @@ namespace Azure.Core.Pole.Tests
                 using var heap = PoleHeap.ReadFrom(stream); // the heap rents buffers from a pool and reads the stream into the buffers
 
                 HelloModel hello = HelloModel.Create(heap.GetAt(0)); // this does not actually "deserialize". it just stores an heap address in the Hello struct 
-
+                
                 Assert.IsTrue(hello.IsEnabled); // this just dereferences a bool stored in the heap
                 Assert.AreEqual(5, hello.RepeatCount); // same but with an int
 

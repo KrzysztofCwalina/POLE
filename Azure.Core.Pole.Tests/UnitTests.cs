@@ -94,18 +94,5 @@ namespace Azure.Core.Pole.Tests
                 }
             }
         }
-
-        [Test]
-        public void NoGarbage()
-        {
-            using PoleHeap heap = new PoleHeap();
-            HelloModel model = HelloModel.Allocate(heap);
-
-            model.Title = "Hello, ";
-
-            Assert.Throws<InvalidOperationException>(()=> {
-                model.Title = "World!";
-            });
-        }
     }
 }
