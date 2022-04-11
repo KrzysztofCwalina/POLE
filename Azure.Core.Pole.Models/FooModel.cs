@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Azure.Core.Pole.TestModels
 {
-    public struct FooModel : IObject
+    public struct FooModel : IObject // TODO: how can we remove this?
     {
         const int FooOffset = 0;                        // int
         const int BarOffset = FooOffset + sizeof(int);  // bool
@@ -14,12 +14,12 @@ namespace Azure.Core.Pole.TestModels
 
         readonly PoleReference _reference;
 
+        PoleReference IObject.Reference => _reference; 
+        private FooModel(PoleReference reference) => _reference = reference;
+
+        // TODO: it would be best if these were on the heap, i.e. heap.Allocate<T>();
         public static FooModel Allocate(PoleHeap heap) => new (heap.Allocate(FooModel.Size));
         public static FooModel Deserialize(PoleHeap heap) => new (heap.GetAt(0));
-
-        PoleReference IObject.Reference => _reference;
-
-        private FooModel(PoleReference reference) => _reference = reference;
 
         public int Foo
         {
@@ -35,8 +35,8 @@ namespace Azure.Core.Pole.TestModels
 
         public Utf8 Bag
         {
-            get => _reference.ReadString(BagOffset);
-            set => _reference.WriteString(BagOffset, value);
+            get => _reference.ReadUtf8(BagOffset);
+            set => _reference.WriteUtf8(BagOffset, value);
         }
 
         public BazModel Baz
@@ -52,11 +52,10 @@ namespace Azure.Core.Pole.TestModels
         const int Size = sizeof(byte);
 
         readonly PoleReference _reference;
+        PoleReference IObject.Reference => _reference;
+        internal BazModel(PoleReference reference) => _reference = reference;
 
         public static BazModel Allocate(PoleHeap heap) => new(heap.Allocate(BazModel.Size));
-        PoleReference IObject.Reference => _reference;
-
-        internal BazModel(PoleReference reference) => _reference = reference;
 
         public bool Bat
         {

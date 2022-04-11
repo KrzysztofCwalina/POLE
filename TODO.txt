@@ -3,3 +3,7 @@ support for buffers (Span<byte>)
 support for converting from JSON
 versioning
 type safety
+support multi-segment heap
+support null references
+polymorphism?
+support other languages

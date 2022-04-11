@@ -25,8 +25,8 @@ namespace Azure.Core.Pole
         public PoleReference ReadReference(int offset) => new PoleReference(_heap, BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset)));
         public void WriteReference(int offset, PoleReference reference) => BinaryPrimitives.WriteInt32LittleEndian(_heap.GetBytes(_address + offset), reference._address);
         public void WriteObject<T>(int offset, T value) where T : IObject => WriteReference(offset, value.Reference);
-        public Utf8 ReadString(int offset) => new Utf8(this.ReadReference(offset));
-        public void WriteString(int offset, Utf8 value) => WriteObject<Utf8>(offset, value);
+        public Utf8 ReadUtf8(int offset) => new Utf8(this.ReadReference(offset));
+        public void WriteUtf8(int offset, Utf8 value) => WriteObject<Utf8>(offset, value);
         public ReadOnlySpan<byte> ReadBytes(int offset)
         {
             var len = BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset));
