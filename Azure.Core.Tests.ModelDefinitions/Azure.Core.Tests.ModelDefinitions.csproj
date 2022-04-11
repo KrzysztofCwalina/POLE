@@ -4,4 +4,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Azure.Core.Pole\Azure.Core.Pole.csproj" />
+  </ItemGroup>
+
 </Project>

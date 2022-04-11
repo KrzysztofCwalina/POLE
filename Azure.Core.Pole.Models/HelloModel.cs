@@ -12,7 +12,8 @@ namespace Azure.Core.Pole.TestModels
         const int RepeatCountOffset = 0;
         const int IsEnabledOffset = 4;
         const int MessageOffset = 5;
-        const int Size = 9;
+        const int TitleOffset = 9;
+        const int Size = 13;
 
         public static HelloModel Allocate(PoleHeap heap) => new(heap.Allocate(HelloModel.Size));
         public static HelloModel Create(PoleReference reference) => new(reference);
@@ -31,6 +32,11 @@ namespace Azure.Core.Pole.TestModels
         {
             get => _reference.ReadUtf8(MessageOffset);
             set => _reference.WriteUtf8(MessageOffset, value);
+        }
+        public string Title
+        {
+            get => _reference.ReadString(TitleOffset);
+            set => _reference.WriteString(TitleOffset, value);
         }
     }
 }

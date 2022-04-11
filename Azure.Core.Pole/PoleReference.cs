@@ -23,7 +23,14 @@ namespace Azure.Core.Pole
         public bool ReadBoolean(int offset) => _heap[_address + offset] != 0;
         public void WriteBoolean(int offset, bool value) => _heap[_address + offset] = value ? (byte)1 : (byte)0;
         public PoleReference ReadReference(int offset) => new PoleReference(_heap, BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset)));
-        public void WriteReference(int offset, PoleReference reference) => BinaryPrimitives.WriteInt32LittleEndian(_heap.GetBytes(_address + offset), reference._address);
+        public void WriteReference(int offset, PoleReference reference)
+        {
+            if (!ReferenceEquals(this._heap, reference._heap)) throw new InvalidOperationException("Cross-heap references are not supported");
+            BinaryPrimitives.WriteInt32LittleEndian(_heap.GetBytes(_address + offset), reference._address);
+        }
+        public void WriteString(int offset, string value) => WriteUtf8(offset, Utf8.Allocate(_heap, value));
+        public string ReadString(int offset) => ReadUtf8(offset).ToString();
+
         public void WriteObject<T>(int offset, T value) where T : IObject => WriteReference(offset, value.Reference);
         public Utf8 ReadUtf8(int offset) => new Utf8(this.ReadReference(offset));
         public void WriteUtf8(int offset, Utf8 value) => WriteObject<Utf8>(offset, value);

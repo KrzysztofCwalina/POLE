@@ -51,8 +51,10 @@ namespace Azure.Core.Pole.Tooling
                 writer.WriteLine($"{indent}public {GetTypeAlias(propertyType)} {property.Name}");
                 writer.WriteLine($"{indent}{{");
                 indent += "    ";
+
                 writer.WriteLine($"{indent}get => _reference.Read{GetTypeName(property.PropertyType)}({property.Name}Offset);");
                 writer.WriteLine($"{indent}set => _reference.Write{GetTypeName(property.PropertyType)}({property.Name}Offset, value);");
+
                 indent = indent.Substring(4);
                 writer.WriteLine($"{indent}}}");
             }
@@ -66,6 +68,7 @@ namespace Azure.Core.Pole.Tooling
         private int GetTypeSize(Type type)
         {
             if (type == typeof(string)) return 4;
+            if (type == typeof(Utf8)) return 4;
             if (type == typeof(int)) return 4;
             if (type == typeof(bool)) return 1;
             throw new NotSupportedException();
@@ -73,14 +76,16 @@ namespace Azure.Core.Pole.Tooling
 
         private string GetTypeAlias(Type type)
         {
-            if (type == typeof(string)) return "Utf8";
+            if (type == typeof(string)) return "string";
+            if (type == typeof(Utf8)) return "Utf8";
             if (type == typeof(int)) return "int";
             if (type == typeof(bool)) return "bool";
             throw new NotSupportedException();
         }
         private string GetTypeName(Type type)
         {
-            if (type == typeof(string)) return "Utf8";
+            if (type == typeof(string)) return "String";
+            if (type == typeof(Utf8)) return "Utf8";
             if (type == typeof(int)) return "Int32";
             if (type == typeof(bool)) return "Boolean";
             throw new NotSupportedException();

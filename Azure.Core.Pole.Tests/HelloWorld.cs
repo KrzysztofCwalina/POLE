@@ -30,13 +30,15 @@ namespace Azure.Core.Pole.Tests
                 hello.RepeatCount = 5;
                 SetIsEnabled(hello, true); // hello is a struct (no alloc), but has reference semantics, e.g. can passed to methods that mutate
 
+                hello.Title = "Hello World Sample";
+
                 heap.WriteTo(stream);
 
                 // local method just to illustrate that POLE objects (structs) can be passed just like reference types
                 void SetIsEnabled(HelloModel hello, bool value) => hello.IsEnabled = value;
             } // heap buffers are returned to the buffer pool here
 
-            Assert.AreEqual(29, stream.Length);
+            Assert.AreEqual(55, stream.Length);
 
             // read from stream
             {
@@ -47,6 +49,8 @@ namespace Azure.Core.Pole.Tests
 
                 Assert.IsTrue(hello.IsEnabled); // this just dereferences a bool stored in the heap
                 Assert.AreEqual(5, hello.RepeatCount); // same but with an int
+
+                Assert.AreEqual("Hello World Sample", hello.Title);
 
                 if (hello.IsEnabled)
                 {
