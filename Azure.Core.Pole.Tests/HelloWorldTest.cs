@@ -28,11 +28,9 @@ namespace Azure.Core.Pole.Tests
 
                 var hello = heap.Allocate<TestModels.Server.HelloModel>();
 
-                hello.Message = Utf8.Allocate(heap, "Hello World!"); // this does not actually allocate anthing on the GC heap.
+                hello.Message = "Hello World!"; // this does not actually allocate anthing on the GC heap.
                 hello.RepeatCount = 5;
                 SetIsEnabled(hello, true); // hello is a struct (no alloc), but has reference semantics, e.g. can passed to methods that mutate
-
-                hello.Title = "Hello World Sample";
 
                 heap.WriteTo(stream);
 
@@ -40,7 +38,7 @@ namespace Azure.Core.Pole.Tests
                 void SetIsEnabled(TestModels.Server.HelloModel hello, bool value) => hello.IsEnabled = value;
             } // heap buffers are returned to the buffer pool here
 
-            Assert.AreEqual(55, stream.Length);
+            Assert.AreEqual(29, stream.Length);
 
             // read from stream
             {
@@ -52,13 +50,11 @@ namespace Azure.Core.Pole.Tests
                 Assert.IsTrue(hello.IsEnabled); // this just dereferences a bool stored in the heap
                 Assert.AreEqual(5, hello.RepeatCount); // same but with an int
 
-                Assert.AreEqual("Hello World Sample", hello.Title);
-
                 if (hello.IsEnabled)
                 {
                     for(int i=0; i<hello.RepeatCount; i++)
                     {
-                        Assert.AreEqual("Hello World!", hello.Message.ToString());
+                        Assert.AreEqual("Hello World!", hello.Message);
                     }
                 }
             }

@@ -17,8 +17,8 @@ using var stream = new MemoryStream();
 // write to stream
 {
     using PoleHeap heap = new PoleHeap(); // the heap rents buffers from a pool
-    HelloModel hello = HelloModel.Allocate(heap); // this does not actually allocate anthing on the GC heap.
-    hello.Message = Utf8.Allocate(heap, "Hello World!"); // this does not actually allocate anthing on the GC heap.
+    var hello = heap.Allocate<TestModels.Server.HelloModel>();
+    hello.Message = "Hello World!"; // this does not actually allocate anthing on the GC heap.
     hello.RepeatCount = 5;
     SetIsEnabled(hello, true); // hello is a struct (no alloc), but has reference semantics, e.g. can passed to methods that mutate
 
@@ -35,7 +35,7 @@ Assert.AreEqual(29, stream.Length);
     stream.Position = 0;
     using var heap = PoleHeap.ReadFrom(stream); // the heap rents buffers from a pool and reads the stream into the buffers
 
-    HelloModel hello = HelloModel.Deserialize(heap); // this does not actually "deserialize", just stores an address in the struct 
+    HelloModel hello = heap.Deserialize<HelloModel>(); // this does not actually "deserialize", just stores an address in the struct 
 
     Assert.IsTrue(hello.IsEnabled); // this just dereferences a bool stored in the heap
     Assert.AreEqual(5, hello.RepeatCount); // same but with an int
@@ -50,40 +50,30 @@ Assert.AreEqual(29, stream.Length);
 }
 ```
 
-## Model Design
+## Model Design (client)
 ```csharp
-public struct HelloModel : IObject
+public struct HelloModel
 {
-    const int RepeatCountOffset = 0;                              // int
-    const int IsEnabledOffset = RepeatCountOffset + sizeof(int);  // bool
-    const int MessageOffset = IsEnabledOffset + sizeof(byte);     // string
-    const int Size = MessageOffset + sizeof(int);
+    private readonly PoleReference __reference;
+    private HelloModel(PoleReference reference) => __reference = reference;
 
-    readonly PoleReference _reference;
+    const int __RepeatCountOffset = 0;
+    const int __IsEnabledOffset = 4;
+    const int __MessageOffset = 5;
 
-    public static HelloModel Allocate(PoleHeap heap) => new (heap.Allocate(HelloModel.Size));
-    public static HelloModel Deserialize(PoleHeap heap) => new (heap.GetAt(0));
-
-    PoleReference IObject.Reference => _reference;
-
-    private HelloModel(PoleReference reference) => _reference = reference;
+    internal static HelloModel Deserialize(PoleReference reference) => new(reference);
 
     public int RepeatCount
     {
-        get => _reference.ReadInt32(RepeatCountOffset);
-        set => _reference.WriteInt32(RepeatCountOffset, value);
+        get => __reference.ReadInt32(__RepeatCountOffset);
     }
-
     public bool IsEnabled
     {
-        get => _reference.ReadBoolean(IsEnabledOffset);
-        set => _reference.WriteBoolean(IsEnabledOffset, value);
+        get => __reference.ReadBoolean(__IsEnabledOffset);
     }
-
-    public Utf8 Message
+    public string Message
     {
-        get => _reference.ReadString(MessageOffset);
-        set => _reference.WriteString(MessageOffset, value);
+        get => __reference.ReadString(__MessageOffset);
     }
 }
 ```

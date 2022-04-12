@@ -7,7 +7,6 @@ namespace Azure.Core.Pole.TestModels.Definitions
     {
         public int RepeatCount { get; }
         public bool IsEnabled { get; }
-        public Utf8 Message { get; }
-        public string Title { get; }
+        public string Message { get; }
     }
 }

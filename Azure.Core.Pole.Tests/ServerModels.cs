@@ -12,10 +12,10 @@ namespace Azure.Core.Pole.Tests
             using PoleHeap heap = new PoleHeap();
             HelloModel model = heap.Allocate<HelloModel>();
 
-            model.Title = "Hello, ";
+            model.Message = "Hello, ";
 
             Assert.Throws<InvalidOperationException>(()=> {
-                model.Title = "World!";
+                model.Message = "World!";
             });
         }
     }
