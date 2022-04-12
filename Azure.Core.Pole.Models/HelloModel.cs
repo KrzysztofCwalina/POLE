@@ -3,28 +3,52 @@ using System;
 
 namespace Azure.Core.Pole.TestModels
 {
-public struct HelloModel
-{
-    private readonly PoleReference __reference;
-    private HelloModel(PoleReference reference) => __reference = reference;
-
-    const int __RepeatCountOffset = 0;
-    const int __IsEnabledOffset = 4;
-    const int __MessageOffset = 5;
-
-    internal static HelloModel Deserialize(PoleReference reference) => new(reference);
-
-    public int RepeatCount
+    internal struct HelloModelSchema
     {
-        get => __reference.ReadInt32(__RepeatCountOffset);
+        public const int RepeatCountOffset = 0;
+        public const int IsEnabledOffset = 4;
+        public const int MessageOffset = 5;
+        public const int Size = 9;
     }
-    public bool IsEnabled
+
+    public struct HelloModel
     {
-        get => __reference.ReadBoolean(__IsEnabledOffset);
-    }
-    public string Message
-    {
-        get => __reference.ReadString(__MessageOffset);
+        private readonly PoleReference _reference;
+        private HelloModel(PoleReference reference) => _reference = reference;
+
+        internal static HelloModel Deserialize(PoleReference reference) => new(reference);
+
+        public int RepeatCount => _reference.ReadInt32(HelloModelSchema.RepeatCountOffset);
+
+        public bool IsEnabled => _reference.ReadBoolean(HelloModelSchema.IsEnabledOffset);
+
+        public string Message => _reference.ReadString(HelloModelSchema.MessageOffset);
     }
 }
+
+namespace Azure.Core.Pole.TestModels.Server
+{
+    public struct HelloModel
+    {
+        private readonly PoleReference _reference;
+        private HelloModel(PoleReference reference) => _reference = reference;
+
+        public static HelloModel Allocate(PoleHeap heap) => new(heap.Allocate(HelloModelSchema.Size));
+
+        public int RepeatCount
+        {
+            get => _reference.ReadInt32(HelloModelSchema.RepeatCountOffset);
+            set => _reference.WriteInt32(HelloModelSchema.RepeatCountOffset, value);
+        }
+        public bool IsEnabled
+        {
+            get => _reference.ReadBoolean(HelloModelSchema.IsEnabledOffset);
+            set => _reference.WriteBoolean(HelloModelSchema.IsEnabledOffset, value);
+        }
+        public string Message
+        {
+            get => _reference.ReadString(HelloModelSchema.MessageOffset);
+            set => _reference.WriteString(HelloModelSchema.MessageOffset, value);
+        }
+    }
 }

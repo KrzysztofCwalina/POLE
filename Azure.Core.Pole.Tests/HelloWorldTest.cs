@@ -22,11 +22,10 @@ namespace Azure.Core.Pole.Tests
         {
             using var stream = new MemoryStream();
 
-            // write to stream
+            // write to stream (something a server would do when it responds to a client request)
             {
                 using PoleHeap heap = new PoleHeap(); // the heap rents buffers from a pool
-
-                var hello = heap.Allocate<TestModels.Server.HelloModel>();
+                var hello = TestModels.Server.HelloModel.Allocate(heap);
 
                 hello.Message = "Hello World!"; // this does not actually allocate anthing on the GC heap.
                 hello.RepeatCount = 5;

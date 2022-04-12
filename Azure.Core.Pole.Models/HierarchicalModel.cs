@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Azure.Core.Pole.TestModels
 {
-    public struct FooModel : IObject // TODO: how can we remove this?
+    public struct HierarchicalModel : IObject // TODO: how can we remove this?
     {
         const int FooOffset = 0;                        // int
         const int BarOffset = FooOffset + sizeof(int);  // bool
@@ -15,11 +15,11 @@ namespace Azure.Core.Pole.TestModels
         readonly PoleReference _reference;
 
         PoleReference IObject.Reference => _reference; 
-        private FooModel(PoleReference reference) => _reference = reference;
+        private HierarchicalModel(PoleReference reference) => _reference = reference;
 
         // TODO: it would be best if these were on the heap, i.e. heap.Allocate<T>();
-        public static FooModel Allocate(PoleHeap heap) => new (heap.Allocate(FooModel.Size));
-        public static FooModel Deserialize(PoleHeap heap) => new (heap.GetAt(0));
+        public static HierarchicalModel Allocate(PoleHeap heap) => new (heap.Allocate(HierarchicalModel.Size));
+        public static HierarchicalModel Deserialize(PoleHeap heap) => new (heap.GetAt(0));
 
         public int Foo
         {
@@ -39,23 +39,23 @@ namespace Azure.Core.Pole.TestModels
             set => _reference.WriteUtf8(BagOffset, value);
         }
 
-        public BazModel Baz
+        public ChildModel Baz
         {
-            get => new BazModel(_reference.ReadReference(BazOffset));
+            get => new ChildModel(_reference.ReadReference(BazOffset));
             set => _reference.WriteObject(BazOffset, value);
         }
     }
 
-    public readonly struct BazModel : IObject
+    public readonly struct ChildModel : IObject
     {
         const int batOffset = 0; // bool
         const int Size = sizeof(byte);
 
         readonly PoleReference _reference;
         PoleReference IObject.Reference => _reference;
-        internal BazModel(PoleReference reference) => _reference = reference;
+        internal ChildModel(PoleReference reference) => _reference = reference;
 
-        public static BazModel Allocate(PoleHeap heap) => new(heap.Allocate(BazModel.Size));
+        public static ChildModel Allocate(PoleHeap heap) => new(heap.Allocate(ChildModel.Size));
 
         public bool Bat
         {

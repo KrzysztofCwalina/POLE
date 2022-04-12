@@ -17,8 +17,8 @@ namespace Azure.Core.Pole.Tests
             {
                 using PoleHeap heap = new PoleHeap();
 
-                FooModel foo = FooModel.Allocate(heap);
-                BazModel baz = BazModel.Allocate(heap);
+                HierarchicalModel foo = HierarchicalModel.Allocate(heap);
+                ChildModel baz = ChildModel.Allocate(heap);
                 foo.Baz = baz; // this will be simplified after https://github.com/dotnet/roslyn/issues/45284 is fixed.
 
                 foo.Foo = 32;
@@ -30,7 +30,7 @@ namespace Azure.Core.Pole.Tests
                 ints[0] = 255;
                 Assert.AreEqual(255, ints[0]);
 
-                IList<FooModel> foos = heap.AllocateArray<FooModel>(1);
+                IList<HierarchicalModel> foos = heap.AllocateArray<HierarchicalModel>(1);
                 foos[0] = foo;
                 Assert.AreEqual("Hello World!", foos[0].Bag.ToString());
 
@@ -43,7 +43,7 @@ namespace Azure.Core.Pole.Tests
                 stream.Position = 0;
                 using var heap = PoleHeap.ReadFrom(stream);
 
-                FooModel model = FooModel.Deserialize(heap);
+                HierarchicalModel model = HierarchicalModel.Deserialize(heap);
                 Assert.AreEqual(32, model.Foo);
                 Assert.AreEqual(true, model.Bar);
                 Assert.AreEqual(true, model.Baz.Bat);
@@ -64,7 +64,7 @@ namespace Azure.Core.Pole.Tests
                     Assert.Less(allocatted, 256); // allocates the heap object (~40 bytes)
 
                     before = GC.GetAllocatedBytesForCurrentThread();
-                    FooModel model = FooModel.Deserialize(heap);
+                    HierarchicalModel model = HierarchicalModel.Deserialize(heap);
                     allocatted = GC.GetAllocatedBytesForCurrentThread() - before;
                     Assert.AreEqual(0, allocatted);
 

@@ -10,7 +10,7 @@ namespace Azure.Core.Pole.Tests
         public void NoGarbage()
         {
             using PoleHeap heap = new PoleHeap();
-            HelloModel model = heap.Allocate<HelloModel>();
+            HelloModel model = HelloModel.Allocate(heap);
 
             model.Message = "Hello, ";
 

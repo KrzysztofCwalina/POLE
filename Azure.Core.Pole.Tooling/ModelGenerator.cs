@@ -32,8 +32,8 @@ namespace Azure.Core.Pole.Tooling
             writer.WriteLine($"{indent}{{");
             indent += "    ";
 
-            writer.WriteLine($"{indent}private readonly PoleReference __reference;");
-            writer.WriteLine($"{indent}private {type.Name}(PoleReference reference) => __reference = reference;");
+            writer.WriteLine($"{indent}private readonly PoleReference _reference;");
+            writer.WriteLine($"{indent}private {type.Name}(PoleReference reference) => _reference = reference;");
             writer.WriteLine();
 
             int offset = 0;
@@ -64,11 +64,11 @@ namespace Azure.Core.Pole.Tooling
                 writer.WriteLine($"{indent}{{");
                 indent += "    ";
 
-                writer.WriteLine($"{indent}get => __reference.Read{GetTypeName(property.PropertyType)}(__{property.Name}Offset);");
+                writer.WriteLine($"{indent}get => _reference.Read{GetTypeName(property.PropertyType)}(__{property.Name}Offset);");
 
                 if (serverSide)
                 {
-                    writer.WriteLine($"{indent}set => __reference.Write{GetTypeName(property.PropertyType)}(__{property.Name}Offset, value);");
+                    writer.WriteLine($"{indent}set => _reference.Write{GetTypeName(property.PropertyType)}(__{property.Name}Offset, value);");
                 }
 
                 indent = indent.Substring(4);
