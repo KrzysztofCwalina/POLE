@@ -71,7 +71,7 @@ namespace Azure.Core.Pole
         public T Allocate<T>()
         {
             var type = typeof(T);
-            var size = type.GetField("Size", BindingFlags.Static | BindingFlags.NonPublic);
+            var size = type.GetField("__Size", BindingFlags.Static | BindingFlags.NonPublic);
             if (size == null || size.FieldType != typeof(int)) throw new InvalidOperationException("type does not have a size field");
             var sizeValue = (int)size.GetValue(null);
             PoleReference reference = this.Allocate(sizeValue);

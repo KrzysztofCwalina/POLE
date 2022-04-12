@@ -28,7 +28,7 @@ namespace Azure.Core.Pole.Tooling
             writer.WriteLine("{");
 
             indent += "    ";
-            writer.WriteLine($"{indent}{visibility} struct {type.Name}");
+            writer.WriteLine($"{indent}public struct {type.Name}");
             writer.WriteLine($"{indent}{{");
             indent += "    ";
 
@@ -51,7 +51,7 @@ namespace Azure.Core.Pole.Tooling
 
             if (serverSide)
             {
-                writer.WriteLine($"{indent}internal static {type.Name} Allocate(PoleHeap heap) => new (heap.Allocate({type.Name}.Size));");
+                writer.WriteLine($"{indent}internal static {type.Name} Allocate(PoleHeap heap) => new (heap.Allocate({type.Name}.__Size));");
             }
 
             writer.WriteLine($"{indent}internal static {type.Name} Deserialize(PoleReference reference) => new (reference);");
@@ -60,15 +60,15 @@ namespace Azure.Core.Pole.Tooling
             foreach (var property in type.GetProperties())
             {
                 var propertyType = property.PropertyType;
-                writer.WriteLine($"{indent}{visibility} {GetTypeAlias(propertyType)} {property.Name}");
+                writer.WriteLine($"{indent}public {GetTypeAlias(propertyType)} {property.Name}");
                 writer.WriteLine($"{indent}{{");
                 indent += "    ";
 
-                writer.WriteLine($"{indent}get => _reference.Read{GetTypeName(property.PropertyType)}(__{property.Name}Offset);");
+                writer.WriteLine($"{indent}get => __reference.Read{GetTypeName(property.PropertyType)}(__{property.Name}Offset);");
 
                 if (serverSide)
                 {
-                    writer.WriteLine($"{indent}set => _reference.Write{GetTypeName(property.PropertyType)}(__{property.Name}Offset, value);");
+                    writer.WriteLine($"{indent}set => __reference.Write{GetTypeName(property.PropertyType)}(__{property.Name}Offset, value);");
                 }
 
                 indent = indent.Substring(4);

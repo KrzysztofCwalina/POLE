@@ -3,40 +3,39 @@ using System;
 
 namespace Azure.Core.Pole.TestModels.Server
 {
-    public struct HelloModel : IObject
+    public struct HelloModel
     {
-        private readonly PoleReference _reference;
-        PoleReference IObject.Reference => _reference;
-        private HelloModel(PoleReference reference) => _reference = reference;
+        private readonly PoleReference __reference;
+        private HelloModel(PoleReference reference) => __reference = reference;
 
-        const int RepeatCountOffset = 0;
-        const int IsEnabledOffset = 4;
-        const int MessageOffset = 5;
-        const int TitleOffset = 9;
-        const int Size = 13;
+        const int __RepeatCountOffset = 0;
+        const int __IsEnabledOffset = 4;
+        const int __MessageOffset = 5;
+        const int __TitleOffset = 9;
+        const int __Size = 13;
 
-        public static HelloModel Allocate(PoleHeap heap) => new(heap.Allocate(HelloModel.Size));
-        public static HelloModel Create(PoleReference reference) => new(reference);
+        internal static HelloModel Allocate(PoleHeap heap) => new(heap.Allocate(HelloModel.__Size));
+        internal static HelloModel Deserialize(PoleReference reference) => new(reference);
 
         public int RepeatCount
         {
-            get => _reference.ReadInt32(RepeatCountOffset);
-            set => _reference.WriteInt32(RepeatCountOffset, value);
+            get => __reference.ReadInt32(__RepeatCountOffset);
+            set => __reference.WriteInt32(__RepeatCountOffset, value);
         }
         public bool IsEnabled
         {
-            get => _reference.ReadBoolean(IsEnabledOffset);
-            set => _reference.WriteBoolean(IsEnabledOffset, value);
+            get => __reference.ReadBoolean(__IsEnabledOffset);
+            set => __reference.WriteBoolean(__IsEnabledOffset, value);
         }
         public Utf8 Message
         {
-            get => _reference.ReadUtf8(MessageOffset);
-            set => _reference.WriteUtf8(MessageOffset, value);
+            get => __reference.ReadUtf8(__MessageOffset);
+            set => __reference.WriteUtf8(__MessageOffset, value);
         }
         public string Title
         {
-            get => _reference.ReadString(TitleOffset);
-            set => _reference.WriteString(TitleOffset, value);
+            get => __reference.ReadString(__TitleOffset);
+            set => __reference.WriteString(__TitleOffset, value);
         }
     }
 }
