@@ -4,10 +4,9 @@ using System.ComponentModel;
 
 namespace Azure.Core.Pole.TestModels
 {
-    public struct HelloModel : IObject
+    public struct HelloModel
     {
         private readonly PoleReference _reference;
-        PoleReference IObject.Reference => _reference;
         private HelloModel(PoleReference reference) => _reference = reference;
 
         const int RepeatCountOffset = 0;
