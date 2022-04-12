@@ -1,5 +1,6 @@
 ﻿using Azure.Core.Pole;
 using System;
+using System.ComponentModel;
 
 namespace Azure.Core.Pole.TestModels
 {
@@ -13,10 +14,8 @@ namespace Azure.Core.Pole.TestModels
         const int IsEnabledOffset = 4;
         const int MessageOffset = 5;
         const int TitleOffset = 9;
-        const int Size = 13;
 
-        public static HelloModel Allocate(PoleHeap heap) => new(heap.Allocate(HelloModel.Size));
-        public static HelloModel Create(PoleReference reference) => new(reference);
+        internal static HelloModel Create(PoleReference reference) => new(reference);
 
         public int RepeatCount
         {

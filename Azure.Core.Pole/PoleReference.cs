@@ -20,6 +20,7 @@ namespace Azure.Core.Pole
         internal PoleHeap Heap => _heap;
         
         public bool IsNull => _address == 0;
+        public static PoleReference Null => new PoleReference(null, 0);
 
         public int ReadInt32(int offset) => BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset));
         public void WriteInt32(int offset, int value) => BinaryPrimitives.WriteInt32LittleEndian(_heap.GetBytes(_address + offset), value);

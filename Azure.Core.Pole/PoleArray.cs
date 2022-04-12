@@ -29,10 +29,61 @@ namespace Azure.Core.Pole
             return new PoleArray<T>(reference);
         }
 
+        public T this[int index]
+        {
+            set
+            {
+                if (index >= _length) throw new IndexOutOfRangeException();
+                if (typeof(T) == typeof(int))
+                {
+                    int i4 = Unsafe.As<T, int>(ref Unsafe.AsRef(value));
+                    _reference.WriteInt32(sizeof(int) + index * sizeof(int), i4);
+                }
+                else if (typeof(IObject).IsAssignableFrom(typeof(T)))
+                {
+                    IObject iobj = value as IObject;
+                    var reference = iobj.Reference;
+                    _reference.WriteInt32(sizeof(int) + index * sizeof(int), reference.Address);
+                }
+                else
+                {
+                    // should this check be done at construction?
+                    throw new NotSupportedException($"type {typeof(T)} not supported");
+                }
+            }
+            get
+            {
+                if (index >= _length) throw new IndexOutOfRangeException();
+                if (typeof(T) == typeof(int))
+                {
+                    int value = _reference.ReadInt32(sizeof(int) + index * sizeof(int));
+                    var i = Unsafe.As<int, T>(ref value);
+                    return i;
+                }
+                else if (typeof(IObject).IsAssignableFrom(typeof(T)))
+                {
+                    // TODO: can reflection be eliminated with static interfaces?
+                    int address = _reference.ReadInt32(sizeof(int) + index * sizeof(int));
+                    var reference = new PoleReference(_reference.Heap, address);
+                    return (T)_reference.Heap.Deserialize(reference, typeof(T));
+                }
+                else
+                {
+                    // should this check be done at construction?
+                    throw new NotSupportedException($"type {typeof(T)} not supported");
+                }
+            }
+        }
+
+        public int Count => _length;
+
+        #region NYI_Interface
         int IList<T>.IndexOf(T item)
         {
             throw new NotImplementedException();
         }
+
+        bool ICollection<T>.IsReadOnly => throw new NotImplementedException();
 
         void IList<T>.Insert(int index, T item)
         {
@@ -78,55 +129,6 @@ namespace Azure.Core.Pole
         {
             throw new NotImplementedException();
         }
-
-        public int Count => _length;
-
-        bool ICollection<T>.IsReadOnly => throw new NotImplementedException();
-
-        public T this[int index] {
-            set
-            {
-                if (index >= _length) throw new IndexOutOfRangeException();
-                if (typeof(T) == typeof(int))
-                {
-                    var i4 = Unsafe.As<T, int>(ref Unsafe.AsRef(value));
-                    _reference.WriteInt32(sizeof(int) + index * sizeof(int), i4);
-                }
-                else if (typeof(IObject).IsAssignableFrom(typeof(T))){
-                    IObject iobj = value as IObject;
-                    var reference = iobj.Reference;
-                    _reference.WriteInt32(sizeof(int) + index * sizeof(int), reference.Address);
-                }
-                else
-                {
-                    // should this check be done at construction?
-                    throw new NotSupportedException($"type {typeof(T)} not supported");
-                }
-            }
-            get
-            {
-                if (index >= _length) throw new IndexOutOfRangeException();
-                if (typeof(T) == typeof(int))
-                {
-                    int value = _reference.ReadInt32(sizeof(int) + index * sizeof(int));
-                    var i = Unsafe.As<int, T>(ref value);
-                    return i;
-                }
-                else if (typeof(IObject).IsAssignableFrom(typeof(T)))
-                {
-                    // TODO: can reflection be eliminated with static interfaces?
-                    int address = _reference.ReadInt32(sizeof(int) + index * sizeof(int));
-                    var reference = new PoleReference(_reference.Heap, address);
-                    var ctor = typeof(T).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new Type[] { typeof(PoleReference) }, Array.Empty<ParameterModifier>());
-                    var value = (T)ctor.Invoke(new object[] { reference });
-                    return value;
-                }
-                else
-                {
-                    // should this check be done at construction?
-                    throw new NotSupportedException($"type {typeof(T)} not supported");
-                }
-            }
-        }
+        #endregion
     }
 }

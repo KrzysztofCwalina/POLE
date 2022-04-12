@@ -2,11 +2,12 @@
 
 namespace Azure.Core.Pole.TestModels.Definitions
 {
+    [Serializable]
     public class HelloModel
     {
-        public int RepeatCount { get; set; }
-        public bool IsEnabled { get; set; }
-        public Utf8 Message { get; set; }
-        public string Title { get; set; }
+        public int RepeatCount { get; }
+        public bool IsEnabled { get; }
+        public Utf8 Message { get; }
+        public string Title { get; }
     }
 }

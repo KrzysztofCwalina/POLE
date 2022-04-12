@@ -1,13 +1,13 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 
 namespace Azure.Core.Pole.Tooling
 {
     public class PoleGenerator
     {
-        public void Generate<T>(Stream stream, bool serverSide = false)
+        public void Generate(Type type, Stream stream, bool serverSide = false)
         {
-            var type = typeof(T);
             if (!type.Namespace.EndsWith("Definitions")) throw new NotSupportedException();
             var modelNamespace = type.Namespace.Substring(0, type.Namespace.Length - ".Definitions".Length);
             if (serverSide)
@@ -29,23 +29,30 @@ namespace Azure.Core.Pole.Tooling
             writer.WriteLine($"{indent}{{");
             indent += "    ";
 
-            writer.WriteLine($"{indent}private readonly PoleReference _reference;");
-            writer.WriteLine($"{indent}PoleReference IObject.Reference => _reference;");
-            writer.WriteLine($"{indent}private {type.Name}(PoleReference reference) => _reference = reference;");
+            writer.WriteLine($"{indent}private readonly PoleReference __reference;");
+            writer.WriteLine($"{indent}PoleReference IObject.Reference => __reference;");
+            writer.WriteLine($"{indent}private {type.Name}(PoleReference reference) => __reference = reference;");
             writer.WriteLine();
 
             int offset = 0;
-            foreach(var property in type.GetProperties())
+            foreach (var property in type.GetProperties())
             {
-                writer.WriteLine($"{indent}const int {property.Name}Offset = {offset};");
+                writer.WriteLine($"{indent}const int __{property.Name}Offset = {offset};");
                 var propertyType = property.PropertyType;
                 offset += GetTypeSize(propertyType);
             }
-            writer.WriteLine($"{indent}const int Size = {offset};");
+            if (serverSide)
+            {
+                writer.WriteLine($"{indent}const int __Size = {offset};");
+            }
             writer.WriteLine();
 
-            writer.WriteLine($"{indent}public static {type.Name} Allocate(PoleHeap heap) => new (heap.Allocate({type.Name}.Size));");
-            writer.WriteLine($"{indent}public static {type.Name} Create(PoleReference reference) => new (reference);");
+            if (serverSide)
+            {
+                writer.WriteLine($"{indent}public static {type.Name} Allocate(PoleHeap heap) => new (heap.Allocate({type.Name}.Size));");
+            }
+
+            writer.WriteLine($"{indent}public static {type.Name} Deserialize(PoleReference reference) => new (reference);");
             writer.WriteLine();
 
             foreach (var property in type.GetProperties())
@@ -70,6 +77,17 @@ namespace Azure.Core.Pole.Tooling
             writer.WriteLine($"{indent}}}");
             writer.WriteLine("}");
             writer.Flush();
+        }
+        public void Generate(Assembly definitions, Stream stream, bool serverSide = false)
+        {
+            Type[] types = definitions.GetTypes();
+            foreach(var type in types)
+            {
+                if (type.IsPublic && type.IsSerializable)
+                {
+                    Generate(type, stream, serverSide);
+                }
+            }
         }
 
         private int GetTypeSize(Type type)

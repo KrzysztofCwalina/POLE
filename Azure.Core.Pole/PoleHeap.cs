@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -66,6 +67,33 @@ namespace Azure.Core.Pole
             return heap;
         }
         public IList<T> AllocateArray<T>(int size) => PoleArray<T>.Allocate(this, size);
+
+        public T Allocate<T>()
+        {
+            var type = typeof(T);
+            var size = type.GetField("Size", BindingFlags.Static | BindingFlags.NonPublic);
+            if (size == null || size.FieldType != typeof(int)) throw new InvalidOperationException("type does not have a size field");
+            var sizeValue = (int)size.GetValue(null);
+            PoleReference reference = this.Allocate(sizeValue);
+            return Deserialize<T>(reference);
+        }
+        public T Deserialize<T>(PoleReference reference)
+        {
+            var ctor = typeof(T).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new Type[] { typeof(PoleReference) }, Array.Empty<ParameterModifier>());
+            var value = (T)ctor.Invoke(new object[] { reference });
+            return value;
+        }
+        public object Deserialize(PoleReference reference, Type type)
+        {
+            var ctor = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new Type[] { typeof(PoleReference) }, Array.Empty<ParameterModifier>());
+            var value = ctor.Invoke(new object[] { reference });
+            return value;
+        }
+        public T Deserialize<T>(int atAddress = 0)
+        {
+            var reference = GetAt(atAddress);
+            return Deserialize<T>(reference);
+        }
 
         public PoleReference Allocate(int size)
         {
