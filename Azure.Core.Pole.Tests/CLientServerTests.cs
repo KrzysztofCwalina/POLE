@@ -10,17 +10,15 @@ namespace Azure.Core.Pole.Tests
         [Test]
         public void ClientServer()
         {
-            {
-                var client = new Client();
+            var client = new Client();
 
-                ClientModel v1 = client.Get(1);
-                Assert.AreEqual(5, v1.Number);
-                Assert.AreEqual(null, v1.Multiplier);
+            ClientModel v1 = client.Get(1);
+            Assert.AreEqual(5, v1.Number);
+            Assert.AreEqual(null, v1.Multiplier);
 
-                ClientModel v2 = client.Get(2);
-                Assert.AreEqual(5, v2.Number);
-                Assert.AreEqual(2, v2.Multiplier);
-            }
+            ClientModel v2 = client.Get(2);
+            Assert.AreEqual(5, v2.Number);
+            Assert.AreEqual(2, v2.Multiplier);
         }
     }
 
@@ -67,7 +65,7 @@ namespace Azure.Core.Pole.Tests
         private ClientModel(PoleReference reference) => _reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static ClientModel Deserialize(PoleHeap heap)
+        internal static ClientModel Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
             if (!reference.SchemaEquals(ClientServerSchema.IdL, ClientServerSchema.IdH)) throw new InvalidCastException();

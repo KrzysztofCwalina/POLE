@@ -9,7 +9,7 @@ namespace Azure.Core.Pole.Tests
     public partial class UnitTests
     {
         [Test]
-        public void E2E()
+        public void FullTypeSystem()
         {
             var stream = new MemoryStream();
 
