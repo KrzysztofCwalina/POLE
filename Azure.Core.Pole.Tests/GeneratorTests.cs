@@ -20,16 +20,16 @@ namespace Azure.Core.Pole.Tests
             generator.Generate(typeof(HelloModel), stream, serverSide: false);
         }
 
-        [Test]
-        public void GenerateTestModels()
-        {
-            var generator = new PoleGenerator();
-            var stream = File.OpenWrite("TestModel_server.cs");
-            generator.Generate(typeof(TestModel).Assembly, stream, serverSide: true);
-            stream.Close();
+        //[Test]
+        //public void GenerateTestModels()
+        //{
+            //var generator = new PoleGenerator();
+            //var stream = File.OpenWrite("TestModel_server.cs");
+            //generator.Generate(typeof(TestModel).Assembly, stream, serverSide: true);
+            //stream.Close();
 
-            stream = File.OpenWrite("TestModel.cs");
-            generator.Generate(typeof(TestModel).Assembly, stream, serverSide: false);
-        }
+            //stream = File.OpenWrite("TestModel.cs");
+            //generator.Generate(typeof(TestModel).Assembly, stream, serverSide: false);
+        //}
     }
 }
