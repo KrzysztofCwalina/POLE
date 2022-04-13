@@ -94,5 +94,14 @@ namespace Azure.Core.Pole.Tests
                 }
             }
         }
+
+        [Test]
+        public void SchemaVerification()
+        {
+            using PoleHeap heap = new PoleHeap();
+            Assert.Throws<InvalidCastException>(() => {
+                HelloModel hello = HelloModel.Deserialize(heap);
+            });
+        }
     }
 }

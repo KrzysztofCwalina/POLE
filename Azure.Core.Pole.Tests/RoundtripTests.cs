@@ -41,7 +41,7 @@ namespace Azure.Core.Pole.Tests
                 using var heap = PoleHeap.ReadFrom(stream);
                 
                 // TODO: add overload to read directly from stream?
-                ClientRountripingModel hello = ClientRountripingModel.Deserialize(heap.GetAt(0));
+                ClientRountripingModel hello = ClientRountripingModel.Deserialize(heap);
                 hello.Message = "Hi!";
                 hello.RepeatCount = 2;
 
@@ -53,7 +53,7 @@ namespace Azure.Core.Pole.Tests
             {
                 stream.Position = 0;
                 using var heap = PoleHeap.ReadFrom(stream);
-                ServerRequestModel hello = ServerRequestModel.Deserialize(heap.GetAt(0));
+                ServerRequestModel hello = ServerRequestModel.Deserialize(heap); // TODO: who disposes the buffers? SHould server models be IDisposable?
 
                 Assert.AreEqual("Hi!", hello.Message.ToString());
                 Assert.AreEqual(2, hello.RepeatCount);

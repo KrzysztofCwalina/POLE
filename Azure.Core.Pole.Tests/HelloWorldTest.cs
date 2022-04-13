@@ -37,14 +37,12 @@ namespace Azure.Core.Pole.Tests
                 void SetIsEnabled(TestModels.Server.HelloModel hello, bool value) => hello.IsEnabled = value;
             } // heap buffers are returned to the buffer pool here
 
-            Assert.AreEqual(29, stream.Length);
+            Assert.AreEqual(45, stream.Length);
 
             // read from stream
             {
                 stream.Position = 0;
-                using var heap = PoleHeap.ReadFrom(stream); // the heap rents buffers from a pool and reads the stream into the buffers
-
-                HelloModel hello = heap.Deserialize<HelloModel>(); // this does not actually "deserialize". it just stores an heap address in the Hello struct 
+                HelloModel hello = HelloModel.Deserialize(stream); // this does not actually "deserialize". it just stores an heap address in the Hello struct 
                 
                 Assert.IsTrue(hello.IsEnabled); // this just dereferences a bool stored in the heap
                 Assert.AreEqual(5, hello.RepeatCount); // same but with an int

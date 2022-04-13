@@ -24,6 +24,22 @@ namespace Azure.Core.Pole
 
         public int ReadInt32(int offset) => BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset));
         public void WriteInt32(int offset, int value) => BinaryPrimitives.WriteInt32LittleEndian(_heap.GetBytes(_address + offset), value);
+
+        public ulong ReadUInt64(int offset) => BinaryPrimitives.ReadUInt64LittleEndian(_heap.GetBytes(_address + offset));
+        public void WriteUInt64(int offset, ulong value) => BinaryPrimitives.WriteUInt64LittleEndian(_heap.GetBytes(_address + offset), value);
+
+        public bool SchemaEquals(ulong idL, ulong idH)
+        {
+            if (ReadUInt64(0) != idL) return false;
+            if (ReadUInt64(sizeof(ulong)) != idH) return false;
+            return true;
+        }
+        public void WriteSchemaId(ulong idL, ulong idH)
+        {
+            WriteUInt64(0, idL);
+            WriteUInt64(sizeof(ulong), idH);
+        }
+
         public bool ReadBoolean(int offset) => _heap[_address + offset] != 0;
         public void WriteBoolean(int offset, bool value) => _heap[_address + offset] = value ? (byte)1 : (byte)0;
         public PoleReference ReadReference(int offset) => new PoleReference(_heap, BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset)));

@@ -7,10 +7,14 @@ namespace Azure.Core.Pole.TestModels
 {
     internal struct ModelSchema
     {
-        public const int RepeatCountOffset = 0;
-        public const int IsEnabledOffset = 4;
-        public const int MessageOffset = 5;
-        public const int Size = 9;
+        public const ulong IdL = 0xfe106fc3b2994232;
+        public const ulong IdH = 0xa177d25283a579b6;
+        public const int IdOffset = 0;
+
+        public const int RepeatCountOffset = 16;
+        public const int IsEnabledOffset = 20;
+        public const int MessageOffset = 21;
+        public const int Size = 25;
     }
 
     // used on the client to compose requests, aka input model
@@ -21,8 +25,9 @@ namespace Azure.Core.Pole.TestModels
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void Serialize(Stream stream)
         {
-            var heap = new PoleHeap(); // TODO: this should write directly to stream, not to in memory buffers
+            var heap = new PoleHeap(); // TODO: this should write to stack spans, then to stream
             var reference = heap.Allocate(ModelSchema.Size);
+            reference.WriteSchemaId(ModelSchema.IdL, ModelSchema.IdH);
             reference.WriteInt32(ModelSchema.RepeatCountOffset, RepeatCount);
             reference.WriteBoolean(ModelSchema.IsEnabledOffset, IsEnabled);
             reference.WriteString(ModelSchema.MessageOffset, Message);
@@ -36,12 +41,22 @@ namespace Azure.Core.Pole.TestModels
     }
 
     // used by the server to parse client requests
-    public class ServerRequestModel
+    public readonly struct ServerRequestModel
     {
         private readonly PoleReference _reference;
         private ServerRequestModel(PoleReference reference) => _reference = reference;
 
-        public static ServerRequestModel Deserialize(PoleReference reference) => new(reference);
+        public static ServerRequestModel Deserialize(PoleHeap heap)
+        {
+            var reference = heap.GetAt(0);
+            if (!reference.SchemaEquals(HelloModelSchema.IdL, HelloModelSchema.IdH)) throw new InvalidCastException();
+            return new(reference);
+        }
+        public static ServerRequestModel Deserialize(Stream stream)
+        {
+            var heap = PoleHeap.ReadFrom(stream);
+            return Deserialize(heap);
+        }
 
         public int RepeatCount => _reference.ReadInt32(ModelSchema.RepeatCountOffset);
 
@@ -51,39 +66,54 @@ namespace Azure.Core.Pole.TestModels
     }
 
     // used on the server to compose responses
-    public struct ServerResponseModel
+    public readonly struct ServerResponseModel
     {
-        private readonly PoleReference __reference;
-        private ServerResponseModel(PoleReference reference) => __reference = reference;
+        private readonly PoleReference _reference;
+        private ServerResponseModel(PoleReference reference) => _reference = reference;
 
-        public static ServerResponseModel Allocate(PoleHeap heap) => new(heap.Allocate(ModelSchema.Size));
+        public static ServerResponseModel Allocate(PoleHeap heap)
+        {
+            PoleReference reference = heap.Allocate(ModelSchema.Size);
+            reference.WriteSchemaId(ModelSchema.IdL, ModelSchema.IdH);
+            return new ServerResponseModel(reference);
+        }
 
         public int RepeatCount
         {
-            get => __reference.ReadInt32(ModelSchema.RepeatCountOffset);
-            set => __reference.WriteInt32(ModelSchema.RepeatCountOffset, value);
+            get => _reference.ReadInt32(ModelSchema.RepeatCountOffset);
+            set => _reference.WriteInt32(ModelSchema.RepeatCountOffset, value);
         }
         public bool IsEnabled
         {
-            get => __reference.ReadBoolean(ModelSchema.IsEnabledOffset);
-            set => __reference.WriteBoolean(ModelSchema.IsEnabledOffset, value);
+            get => _reference.ReadBoolean(ModelSchema.IsEnabledOffset);
+            set => _reference.WriteBoolean(ModelSchema.IsEnabledOffset, value);
         }
         public Utf8 Message
         {
-            get => __reference.ReadUtf8(ModelSchema.MessageOffset);
-            set => __reference.WriteUtf8(ModelSchema.MessageOffset, value);
+            get => _reference.ReadUtf8(ModelSchema.MessageOffset);
+            set => _reference.WriteUtf8(ModelSchema.MessageOffset, value);
         }
     }
 
     // used by the client to parse server responses, aka output model
-    public class ClientResponseModel
+    public readonly struct ClientResponseModel
     {
         private readonly PoleReference _reference;
         private ClientResponseModel(PoleReference reference) => _reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static ClientResponseModel Deserialize(PoleReference reference) => new(reference);
-
+        public static ClientResponseModel Deserialize(PoleHeap heap)
+        {
+            var reference = heap.GetAt(0);
+            if (!reference.SchemaEquals(ModelSchema.IdL, ModelSchema.IdH)) throw new InvalidCastException();
+            return new(reference);
+        }
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public static ClientResponseModel Deserialize(Stream stream)
+        {
+            var heap = PoleHeap.ReadFrom(stream);
+            return Deserialize(heap);
+        }
         public int RepeatCount => _reference.ReadInt32(ModelSchema.RepeatCountOffset);
 
         public bool IsEnabled => _reference.ReadBoolean(ModelSchema.IsEnabledOffset);
@@ -100,13 +130,25 @@ namespace Azure.Core.Pole.TestModels
         private ClientRountripingModel(PoleReference reference) => __reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static ClientRountripingModel Deserialize(PoleReference reference) => new(reference);
+        public static ClientRountripingModel Deserialize(PoleHeap heap)
+        {
+            var reference = heap.GetAt(0);
+            if (!reference.SchemaEquals(ModelSchema.IdL, ModelSchema.IdH)) throw new InvalidCastException();
+            return new(reference);
+        }
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public static ClientRountripingModel Deserialize(Stream stream)
+        {
+            var heap = PoleHeap.ReadFrom(stream);
+            return Deserialize(heap);
+        }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void Serialize(Stream stream)
         {
             var heap = new PoleHeap(); // TODO: this should write directly to stream, not to in memory buffers
             var reference = heap.Allocate(ModelSchema.Size);
+            reference.WriteSchemaId(ModelSchema.IdL, ModelSchema.IdH);
             reference.WriteInt32(ModelSchema.RepeatCountOffset, RepeatCount);
             reference.WriteBoolean(ModelSchema.IsEnabledOffset, IsEnabled);
 
@@ -151,11 +193,22 @@ namespace Azure.Core.Pole.TestModels
         private string _message; // mutable variable size fields need to be on the GC heap
         private ServerRountripingModel(PoleReference reference) => __reference = reference;
 
-        public static ServerRountripingModel Deserialize(PoleReference reference) => new(reference);
+        public static ServerRountripingModel Deserialize(PoleHeap heap)
+        {
+            var reference = heap.GetAt(0);
+            if (!reference.SchemaEquals(ModelSchema.IdL, ModelSchema.IdH)) throw new InvalidCastException();
+            return new(reference);
+        }
+        public static ServerRountripingModel Deserialize(Stream stream)
+        {
+            var heap = PoleHeap.ReadFrom(stream);
+            return Deserialize(heap);
+        }
         public void Serialize(Stream stream)
         {
             var heap = new PoleHeap(); // TODO: this should write directly to stream, not to in memory buffers
             var reference = heap.Allocate(ModelSchema.Size);
+            reference.WriteSchemaId(ModelSchema.IdL, ModelSchema.IdH);
             reference.WriteInt32(ModelSchema.RepeatCountOffset, RepeatCount);
             reference.WriteBoolean(ModelSchema.IsEnabledOffset, IsEnabled);
 

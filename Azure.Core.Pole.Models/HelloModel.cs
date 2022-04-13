@@ -1,14 +1,21 @@
 ﻿using Azure.Core.Pole;
 using System;
+using System.ComponentModel;
+using System.IO;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace Azure.Core.Pole.TestModels
 {
     internal struct HelloModelSchema
     {
-        public const int RepeatCountOffset = 0;
-        public const int IsEnabledOffset = 4;
-        public const int MessageOffset = 5;
-        public const int Size = 9;
+        public const ulong IdL = 0xfe106fc3b2994232;
+        public const ulong IdH = 0xa177d25283a579b6;
+        public const int IdOffset = 0;
+
+        public const int RepeatCountOffset = 16;
+        public const int IsEnabledOffset = 20;
+        public const int MessageOffset = 21;
+        public const int Size = 25;
     }
 
     public struct HelloModel
@@ -16,7 +23,19 @@ namespace Azure.Core.Pole.TestModels
         private readonly PoleReference _reference;
         private HelloModel(PoleReference reference) => _reference = reference;
 
-        internal static HelloModel Deserialize(PoleReference reference) => new(reference);
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public static HelloModel Deserialize(PoleHeap heap)
+        {
+            var reference = heap.GetAt(0);
+            if (!reference.SchemaEquals(HelloModelSchema.IdL, HelloModelSchema.IdH)) throw new InvalidCastException();
+            return new (reference);
+        } 
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public static HelloModel Deserialize(Stream stream)
+        {
+            var heap = PoleHeap.ReadFrom(stream);
+            return Deserialize(heap);
+        }
 
         public int RepeatCount => _reference.ReadInt32(HelloModelSchema.RepeatCountOffset);
 
@@ -33,7 +52,12 @@ namespace Azure.Core.Pole.TestModels.Server
         private readonly PoleReference _reference;
         private HelloModel(PoleReference reference) => _reference = reference;
 
-        public static HelloModel Allocate(PoleHeap heap) => new(heap.Allocate(HelloModelSchema.Size));
+        public static HelloModel Allocate(PoleHeap heap)
+        {
+            PoleReference reference = heap.Allocate(HelloModelSchema.Size);
+            reference.WriteSchemaId(HelloModelSchema.IdL, HelloModelSchema.IdH);
+            return new HelloModel(reference);
+        }
 
         public int RepeatCount
         {
