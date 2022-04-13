@@ -11,6 +11,6 @@ namespace Azure.Core.Pole.TestModels.Definitions
         public string Message { get; }
 
         [Version(2)]
-        public bool? IsEnabled { get; }
+        public bool IsEnabled { get; }
     }
 }
