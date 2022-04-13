@@ -13,6 +13,16 @@ namespace Azure.Core.Pole.Tests
         {
             var stream = new MemoryStream();
 
+            // client request
+            {
+                ClientRequestModel model = new ClientRequestModel();
+                model.Message = "Hello";
+                model.IsEnabled = true;
+                model.RepeatCount = 5;
+
+                model.Serialize(stream);
+            }
+
             // server
             {
                 using PoleHeap heap = new PoleHeap();

@@ -18,16 +18,18 @@ namespace Azure.Core.Pole
             var bufferLength = strLength + sizeof(int);
             var reference = heap.Allocate(bufferLength);
             Span<byte> buffer = heap.GetBytes(reference.Address, bufferLength);
-            byte[] utf8 = Encoding.UTF8.GetBytes(str); // TODO: this should encode directly into the buffer
             BinaryPrimitives.WriteInt32LittleEndian(buffer, strLength);
-            utf8.AsSpan().CopyTo(buffer.Slice(sizeof(int)));
+            if (!str.TryEncodeToUtf8(buffer.Slice(sizeof(int)), out var written))
+            {
+                throw new NotImplementedException("this should never happen");
+            }               
             return new Utf8(reference);
         }
 
         public override string ToString()
         {
             var bytes = _reference.ReadBytes(0);
-            return Encoding.UTF8.GetString(bytes.ToArray());
+            return bytes.ToStringAsciiNoAlloc();
         }
     }
 }

@@ -19,7 +19,9 @@ namespace Azure.Core.Pole
         public PoleHeap(int segmentSize = 512)
         {
             _segmentSize = segmentSize;
-            _memory = ArrayPool<byte>.Shared.Rent(segmentSize);
+            var bytes = ArrayPool<byte>.Shared.Rent(segmentSize);
+            Array.Clear(bytes, 0, bytes.Length);
+            _memory = bytes;
         }
 
         public static async Task<PoleHeap> CreateAsync(Stream stream, int segmentSize = 512, CancellationToken cancellationToken = default)
