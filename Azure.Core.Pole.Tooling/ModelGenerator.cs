@@ -4,6 +4,23 @@ using System.Reflection;
 
 namespace Azure.Core.Pole.Tooling
 {
+    public class GenerateAttribute : Attribute
+    {
+        public GenerateAttribute(ModelVariants variants) => Variants = variants;
+
+        public ModelVariants Variants { get; private set; }
+    }
+
+    [Flags]
+    public enum ModelVariants
+    {
+        ClientInput = 1,
+        ClientOutput = 2,
+        ClinetRoundtrip = 4,
+        ServerRequest = 8,
+        ServerResponse = 16,
+    }
+
     public class PoleGenerator
     {
         public void Generate(Type type, Stream stream, bool serverSide = false)
@@ -117,5 +134,12 @@ namespace Azure.Core.Pole.Tooling
             if (type == typeof(bool)) return "Boolean";
             throw new NotSupportedException();
         }
+    }
+
+    public class VersionAttribute : Attribute
+    {
+        public VersionAttribute(int version) => Version = version;
+
+        public int Version { get; private set; }
     }
 }

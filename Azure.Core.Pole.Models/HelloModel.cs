@@ -8,13 +8,12 @@ namespace Azure.Core.Pole.TestModels
 {
     internal struct HelloModelSchema
     {
-        public const ulong IdL = 0xfe106fc3b2994232;
+        public const ulong IdL = 0xfe106fc3b2994232; // TODO: can Id be just one ulong? Today it's a GUID
         public const ulong IdH = 0xa177d25283a579b6;
-        public const int IdOffset = 0;
 
         public const int RepeatCountOffset = 16;
         public const int IsEnabledOffset = 20;
-        public const int MessageOffset = 21;
+        public const int MessageOffset = 21; // TODO: what about alignment?
         public const int Size = 25;
     }
 

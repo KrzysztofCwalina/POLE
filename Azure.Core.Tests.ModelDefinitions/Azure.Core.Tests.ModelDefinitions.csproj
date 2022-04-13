@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Azure.Core.Pole.Tooling\Azure.Core.Pole.Tooling.csproj" />
     <ProjectReference Include="..\Azure.Core.Pole\Azure.Core.Pole.csproj" />
   </ItemGroup>
 

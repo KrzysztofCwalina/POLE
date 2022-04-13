@@ -40,61 +40,6 @@ namespace Azure.Core.Pole.TestModels
         public string Message { get; set; }
     }
 
-    // used by the server to parse client requests
-    public readonly struct ServerRequestModel
-    {
-        private readonly PoleReference _reference;
-        private ServerRequestModel(PoleReference reference) => _reference = reference;
-
-        public static ServerRequestModel Deserialize(PoleHeap heap)
-        {
-            var reference = heap.GetAt(0);
-            if (!reference.SchemaEquals(HelloModelSchema.IdL, HelloModelSchema.IdH)) throw new InvalidCastException();
-            return new(reference);
-        }
-        public static ServerRequestModel Deserialize(Stream stream)
-        {
-            var heap = PoleHeap.ReadFrom(stream);
-            return Deserialize(heap);
-        }
-
-        public int RepeatCount => _reference.ReadInt32(ModelSchema.RepeatCountOffset);
-
-        public bool IsEnabled => _reference.ReadBoolean(ModelSchema.IsEnabledOffset);
-
-        public Utf8 Message => _reference.ReadUtf8(ModelSchema.MessageOffset);
-    }
-
-    // used on the server to compose responses
-    public readonly struct ServerResponseModel
-    {
-        private readonly PoleReference _reference;
-        private ServerResponseModel(PoleReference reference) => _reference = reference;
-
-        public static ServerResponseModel Allocate(PoleHeap heap)
-        {
-            PoleReference reference = heap.Allocate(ModelSchema.Size);
-            reference.WriteSchemaId(ModelSchema.IdL, ModelSchema.IdH);
-            return new ServerResponseModel(reference);
-        }
-
-        public int RepeatCount
-        {
-            get => _reference.ReadInt32(ModelSchema.RepeatCountOffset);
-            set => _reference.WriteInt32(ModelSchema.RepeatCountOffset, value);
-        }
-        public bool IsEnabled
-        {
-            get => _reference.ReadBoolean(ModelSchema.IsEnabledOffset);
-            set => _reference.WriteBoolean(ModelSchema.IsEnabledOffset, value);
-        }
-        public Utf8 Message
-        {
-            get => _reference.ReadUtf8(ModelSchema.MessageOffset);
-            set => _reference.WriteUtf8(ModelSchema.MessageOffset, value);
-        }
-    }
-
     // used by the client to parse server responses, aka output model
     public readonly struct ClientResponseModel
     {
@@ -186,62 +131,58 @@ namespace Azure.Core.Pole.TestModels
         }
     }
 
-    // used by the server to receive request from client, mutate payload, and send it back.
-    public class ServerRountripingModel
+    // used by the server to parse client requests
+    public readonly struct ServerRequestModel
     {
-        private readonly PoleReference __reference;
-        private string _message; // mutable variable size fields need to be on the GC heap
-        private ServerRountripingModel(PoleReference reference) => __reference = reference;
+        private readonly PoleReference _reference;
+        private ServerRequestModel(PoleReference reference) => _reference = reference;
 
-        public static ServerRountripingModel Deserialize(PoleHeap heap)
+        public static ServerRequestModel Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
-            if (!reference.SchemaEquals(ModelSchema.IdL, ModelSchema.IdH)) throw new InvalidCastException();
+            if (!reference.SchemaEquals(HelloModelSchema.IdL, HelloModelSchema.IdH)) throw new InvalidCastException();
             return new(reference);
         }
-        public static ServerRountripingModel Deserialize(Stream stream)
+        public static ServerRequestModel Deserialize(Stream stream)
         {
             var heap = PoleHeap.ReadFrom(stream);
             return Deserialize(heap);
         }
-        public void Serialize(Stream stream)
-        {
-            var heap = new PoleHeap(); // TODO: this should write directly to stream, not to in memory buffers
-            var reference = heap.Allocate(ModelSchema.Size);
-            reference.WriteSchemaId(ModelSchema.IdL, ModelSchema.IdH);
-            reference.WriteInt32(ModelSchema.RepeatCountOffset, RepeatCount);
-            reference.WriteBoolean(ModelSchema.IsEnabledOffset, IsEnabled);
 
-            if (_message != null) // mutated
-            {
-                var message = Utf8.Allocate(heap, _message);
-                reference.WriteUtf8(ModelSchema.MessageOffset, message);
-            }
-            else
-            {
-                throw new NotImplementedException(); // should just copy bytes
-            }
-            heap.WriteTo(stream);
+        public int RepeatCount => _reference.ReadInt32(ModelSchema.RepeatCountOffset);
+
+        public bool IsEnabled => _reference.ReadBoolean(ModelSchema.IsEnabledOffset);
+
+        public Utf8 Message => _reference.ReadUtf8(ModelSchema.MessageOffset);
+    }
+
+    // used on the server to compose responses
+    public readonly struct ServerResponseModel
+    {
+        private readonly PoleReference _reference;
+        private ServerResponseModel(PoleReference reference) => _reference = reference;
+
+        public static ServerResponseModel Allocate(PoleHeap heap)
+        {
+            PoleReference reference = heap.Allocate(ModelSchema.Size);
+            reference.WriteSchemaId(ModelSchema.IdL, ModelSchema.IdH);
+            return new ServerResponseModel(reference);
         }
+
         public int RepeatCount
         {
-            get => __reference.ReadInt32(ModelSchema.RepeatCountOffset);
-            set => __reference.WriteInt32(ModelSchema.RepeatCountOffset, value);
+            get => _reference.ReadInt32(ModelSchema.RepeatCountOffset);
+            set => _reference.WriteInt32(ModelSchema.RepeatCountOffset, value);
         }
         public bool IsEnabled
         {
-            get => __reference.ReadBoolean(ModelSchema.IsEnabledOffset);
-            set => __reference.WriteBoolean(ModelSchema.IsEnabledOffset, value);
+            get => _reference.ReadBoolean(ModelSchema.IsEnabledOffset);
+            set => _reference.WriteBoolean(ModelSchema.IsEnabledOffset, value);
         }
-        public string Message
+        public Utf8 Message
         {
-            get
-            {
-                if (_message == null) return __reference.ReadString(ModelSchema.MessageOffset);
-                return _message;
-            }
-
-            set => _message = value;
+            get => _reference.ReadUtf8(ModelSchema.MessageOffset);
+            set => _reference.WriteUtf8(ModelSchema.MessageOffset, value);
         }
     }
 }
