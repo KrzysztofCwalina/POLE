@@ -1,11 +1,8 @@
-support both output and input (with ctors) models
-remove Create method from client model
-support for arrays
+finish support for child types
+support generating client + server
 support dictionaries
 support for buffers (Span<byte>)
 support for converting from JSON
-versioning
-type safety
 support multi-segment heap
 support null references
 polymorphism?
