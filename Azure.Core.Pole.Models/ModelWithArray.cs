@@ -10,14 +10,16 @@ namespace Azure.Core.Pole.TestModels
     {
         public const ulong TypeId = 0xfe106fc3b2994232;
 
-        public const int AllOffset = 16;
-        public const int Size = 20;
+        public const int IntegersOffset = 16;
+        public const int StringsOffset = 20;
+        public const int Size = 24;
     }
 
     public class ModelWithArray
     {
         private readonly PoleReference _reference;
-        private PoleArray<int> _array;
+        private PoleArray<int> _integers;
+        private PoleArray<string> _strings;
 
         private ModelWithArray(PoleReference reference) => _reference = reference;
 
@@ -35,13 +37,23 @@ namespace Azure.Core.Pole.TestModels
             return Deserialize(heap);
         }
 
-        public IReadOnlyList<int> All
+        public IReadOnlyList<int> Integers
         {
             get
             {
-                var reference = _reference.ReadReference(ModelWithCollectionSchema.AllOffset);
-                if (_array == null) _array = new PoleArray<int>(reference, new PoleType(typeof(int)));
-                return _array;
+                var reference = _reference.ReadReference(ModelWithCollectionSchema.IntegersOffset);
+                if (_integers == null) _integers = new PoleArray<int>(reference, new PoleType(typeof(int)));
+                return _integers;
+            }
+        }
+
+        public IReadOnlyList<string> Strings
+        {
+            get
+            {
+                var reference = _reference.ReadReference(ModelWithCollectionSchema.StringsOffset);
+                if (_strings == null) _strings = new PoleArray<string>(reference, new PoleType(typeof(string))); // TODO: string should not be passed separatelly
+                return _strings;
             }
         }
     }
@@ -52,12 +64,14 @@ namespace Azure.Core.Pole.TestModels.Server
     public class ModelWithArray
     {
         private readonly PoleReference _reference;
-        private PoleArray<int> _array;
+        private PoleArray<int> _integers;
+        private PoleArray<Utf8> _strings;
 
         private ModelWithArray(PoleReference reference)
         {
             _reference = reference;
-            _array = null;
+            _integers = null;
+            _strings = null;
         } 
 
         public static ModelWithArray Allocate(PoleHeap heap)
@@ -67,12 +81,22 @@ namespace Azure.Core.Pole.TestModels.Server
             return new ModelWithArray(reference);
         }
 
-        public PoleArray<int> All
+        public PoleArray<int> Integers
         {
-            get => _array;
+            get => _integers;
             set {
-                _array = value;
-                _reference.WriteReference(ModelWithCollectionSchema.AllOffset, value.Reference);
+                _integers = value;
+                _reference.WriteReference(ModelWithCollectionSchema.IntegersOffset, value.Reference);
+            }
+        }
+
+        public PoleArray<Utf8> Strings
+        {
+            get => _strings;
+            set
+            {
+                _strings = value;
+                _reference.WriteReference(ModelWithCollectionSchema.StringsOffset, value.Reference);
             }
         }
     }

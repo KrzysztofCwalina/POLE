@@ -43,10 +43,18 @@ namespace Azure.Core.Pole
             BinaryPrimitives.WriteInt32LittleEndian(_heap.GetBytes(_address + offset), reference._address);
         }
         public void WriteString(int offset, string value) => WriteUtf8(offset, Utf8.Allocate(_heap, value));
-        public string ReadString(int offset) => ReadUtf8(offset).ToString();
+        public string ReadString(int offset = 0) => ReadUtf8(offset).ToString();
 
         public void WriteObject<T>(int offset, T value) where T : IObject => WriteReference(offset, value.Reference);
-        public Utf8 ReadUtf8(int offset) => new Utf8(this.ReadReference(offset));
+        public Utf8 ReadUtf8(int offset) => new Utf8(this.Slice(offset));
+
+        private PoleReference Slice(int offset)
+        {
+            var newAddress = Address + offset;
+            if (newAddress > Heap.GetBytes(0).Length) throw new IndexOutOfRangeException();
+            return new PoleReference(this.Heap, newAddress);
+        }
+
         public void WriteUtf8(int offset, Utf8 value) => WriteObject<Utf8>(offset, value);
         public ReadOnlySpan<byte> ReadBytes(int offset)
         {

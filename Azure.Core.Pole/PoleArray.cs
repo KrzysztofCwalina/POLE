@@ -37,17 +37,15 @@ namespace Azure.Core.Pole
             set
             {
                 if (index >= Count) throw new IndexOutOfRangeException();
-
+                int itemOffset = ItemSize * index + ItemsOffset;
                 if (typeof(T) == typeof(int))
                 {
-                    int itemOffset = sizeof(int) + index * sizeof(int);
                     _reference.WriteInt32(itemOffset, (int)(object)value);
                 }
                 else if (typeof(IObject).IsAssignableFrom(typeof(T)))
                 {
                     IObject iobj = value as IObject;
                     var reference = iobj.Reference;
-                    int itemOffset = ItemSize * index + ItemsOffset;
                     _reference.WriteInt32(itemOffset, reference.Address);
                 }
                 else
@@ -59,15 +57,24 @@ namespace Azure.Core.Pole
             get
             {
                 if (index >= Count) throw new IndexOutOfRangeException();
+                int itemOffset = ItemSize * index + ItemsOffset;
                 if (typeof(T) == typeof(int))
                 {
-                    int value = _reference.ReadInt32(sizeof(int) + index * sizeof(int));
+
+                    int value = _reference.ReadInt32(itemOffset);
                     var i = Unsafe.As<int, T>(ref value);
                     return i;
                 }
+                else if(typeof(T) == typeof(string))
+                {
+                    var reference = _reference.ReadReference(itemOffset);
+                    var str = reference.ReadString();
+                    return (T)(object)str;
+
+                }
                 else if (typeof(IObject).IsAssignableFrom(typeof(T)))
                 {
-                    int itemAddress = _reference.ReadInt32(sizeof(int) + index * sizeof(int));
+                    int itemAddress = _reference.ReadInt32(itemOffset);
                     var reference = new PoleReference(_reference.Heap, itemAddress);
                     return (T)_reference.Heap.Deserialize(reference, typeof(T)); // TODO: can reflection be eliminated?
                 }
