@@ -47,27 +47,28 @@ namespace Azure.Core.Pole.Tests
 
     internal struct ModelSchema
     {
-        public const ulong V1 = 0xfe106fc3b2994231;
-        public const ulong V2 = 0xa177d25283a579b5;
+        const ulong SchemaId = 0xfe106fc3b2994200;
 
         public const int NumberOffset = 8;
         public const int MultiplierOffset = 12; // added in V2
 
-        public const int SizeV1 = 12;
-        public const int SizeV2 = 16;
+        const int SizeV1 = 12;
+        const int SizeV2 = 16;
 
-        public static ulong GetSchema(ushort version)
-        {
-            if (version == 1) return V1;
-            if (version == 2) return V2;
-            throw new ArgumentOutOfRangeException();
-        }
         public static int GetSize(ushort version)
         {
             if (version == 1) return SizeV1;
             if (version == 2) return SizeV2;
             throw new ArgumentOutOfRangeException();
         }
+        public static bool SchemaMatches(ulong typeId)
+        {
+            var schema = (typeId & 0xFFFFFFFFFFFFFF00);
+            return schema == SchemaId;
+        }
+       
+        public static int GetVersion(ulong typeId) => (byte)typeId;
+        public static ulong GetTypeId(byte version) => SchemaId | version;
     }
 
     public class ClientV1Model
@@ -80,7 +81,7 @@ namespace Azure.Core.Pole.Tests
         {
             var reference = heap.GetAt(0);
             var type = reference.ReadTypeId();
-            if (type != ModelSchema.V1 && type != ModelSchema.V2) throw new InvalidCastException();
+            if (!ModelSchema.SchemaMatches(type)) throw new InvalidCastException();
             return new(reference);
         }
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -103,7 +104,7 @@ namespace Azure.Core.Pole.Tests
         {
             var reference = heap.GetAt(0);
             var type = reference.ReadTypeId();
-            if (type != ModelSchema.V1 && type != ModelSchema.V2) throw new InvalidCastException();
+            if (ModelSchema.SchemaMatches(type)) throw new InvalidCastException();
             return new(reference);
         }
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -117,7 +118,7 @@ namespace Azure.Core.Pole.Tests
         {
             get
             {
-                if (Type == ModelSchema.V2) return _reference.ReadInt32(ModelSchema.MultiplierOffset);
+                if (ModelSchema.GetVersion(Type) > 1) return _reference.ReadInt32(ModelSchema.MultiplierOffset);
                 return null;
             }
         }   
@@ -130,13 +131,13 @@ namespace Azure.Core.Pole.Tests
 
         private ServerVersionedModel(PoleReference reference) => _reference = reference;
 
-        public static ServerVersionedModel Allocate(PoleHeap heap, ushort version)
+        public static ServerVersionedModel Allocate(PoleHeap heap, byte version)
         {
             int size = ModelSchema.GetSize(version);
             PoleReference reference = heap.Allocate(size);
 
-            ulong schemaId = ModelSchema.GetSchema(version);
-            reference.WriteUInt64(0, schemaId);
+            ulong typeId = ModelSchema.GetTypeId(version);
+            reference.WriteUInt64(0, typeId);
             return new ServerVersionedModel(reference);
         }
 
@@ -152,13 +153,13 @@ namespace Azure.Core.Pole.Tests
         {
             get
             {
-                if (Type == ModelSchema.V1) throw new InvalidOperationException("this version does not have Number");
+                if (ModelSchema.GetVersion(Type) < 2) throw new InvalidOperationException("this version does not have Number");
                 return _reference.ReadInt32(ModelSchema.MultiplierOffset);
             }
 
             set
             {
-                if (Type == ModelSchema.V1) throw new InvalidOperationException("this version does not have Number");
+                if (ModelSchema.GetVersion(Type) < 2) throw new InvalidOperationException("this version does not have Number");
                 _reference.WriteInt32(ModelSchema.MultiplierOffset, value);
             }
         }
