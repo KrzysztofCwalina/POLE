@@ -26,37 +26,31 @@ namespace Azure.Core.Pole
         public void WriteUInt16(int offset, ushort value) => BinaryPrimitives.WriteUInt16LittleEndian(_heap.GetBytes(_address + offset), value);
         public int ReadInt32(int offset) => BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset));
         public void WriteInt32(int offset, int value) => BinaryPrimitives.WriteInt32LittleEndian(_heap.GetBytes(_address + offset), value);
-
         public ulong ReadUInt64(int offset) => BinaryPrimitives.ReadUInt64LittleEndian(_heap.GetBytes(_address + offset));
         public void WriteUInt64(int offset, ulong value) => BinaryPrimitives.WriteUInt64LittleEndian(_heap.GetBytes(_address + offset), value);
-        public ulong ReadTypeId() => ReadUInt64(0);
-        public void WriteSchemaId(ulong typeId) => WriteUInt64(0, typeId);
-
         public bool ReadBoolean(int offset) => _heap[_address + offset] != 0;
         public void WriteBoolean(int offset, bool value) => _heap[_address + offset] = value ? (byte)1 : (byte)0;
-        public PoleReference ReadReference(int offset) => new PoleReference(_heap, BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset)));
+
+        public ulong ReadTypeId() => ReadUInt64(0);
+        public void WriteTypeId(ulong typeId) => WriteUInt64(0, typeId);
+
+        public PoleReference ReadReference(int offset) => new PoleReference(_heap, ReadInt32(offset));
         public void WriteReference(int offset, PoleReference reference)
         {
             PoleReference existing = ReadReference(offset);
             if (!existing.IsNull) throw new InvalidOperationException("model property can be assigned only once");
             if (!ReferenceEquals(this._heap, reference._heap)) throw new InvalidOperationException("Cross-heap references are not supported");
-            BinaryPrimitives.WriteInt32LittleEndian(_heap.GetBytes(_address + offset), reference._address);
+            WriteInt32(offset, reference._address);
         }
-        public void WriteString(int offset, string value) => WriteUtf8(offset, Utf8.Allocate(_heap, value));
-        public string ReadString(int offset = 0) => ReadUtf8(offset).ToString();
-
         public void WriteObject<T>(int offset, T value) where T : IObject => WriteReference(offset, value.Reference);
-        public Utf8 ReadUtf8(int offset) => new Utf8(this.Slice(offset));
 
-        private PoleReference Slice(int offset)
-        {
-            var newAddress = Address + offset;
-            if (newAddress > Heap.GetBytes(0).Length) throw new IndexOutOfRangeException();
-            return new PoleReference(this.Heap, newAddress);
-        }
+        public void WriteString(int offset, string value) => WriteUtf8(offset, Utf8.Allocate(_heap, value));
+        public string ReadString(int offset) => ReadUtf8(offset).ToString();
 
+        public Utf8 ReadUtf8(int offset) => new Utf8(ReadReference(offset));
         public void WriteUtf8(int offset, Utf8 value) => WriteObject<Utf8>(offset, value);
-        public ReadOnlySpan<byte> ReadBytes(int offset)
+        
+        public ReadOnlySpan<byte> ReadByteBuffer(int offset)
         {
             var len = BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset));
             return _heap.GetBytes(_address + sizeof(int), len);

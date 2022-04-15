@@ -7,9 +7,8 @@ namespace Azure.Core.Pole.TestModels
 {
     internal struct ModelSchema
     {
-        public const ulong TypeId = 0xfe106fc3b2994232;
+        public const ulong SchemaId = 0xfe106fc3b2994200;
 
-        public const int IdOffset = 0;
         public const int RepeatCountOffset = 16;
         public const int IsEnabledOffset = 20;
         public const int MessageOffset = 21;
@@ -26,7 +25,7 @@ namespace Azure.Core.Pole.TestModels
         {
             var heap = new PoleHeap(); // TODO: this should write to stack spans, then to stream
             var reference = heap.Allocate(ModelSchema.Size);
-            reference.WriteSchemaId(ModelSchema.TypeId);
+            reference.WriteTypeId(ModelSchema.SchemaId);
             reference.WriteInt32(ModelSchema.RepeatCountOffset, RepeatCount);
             reference.WriteBoolean(ModelSchema.IsEnabledOffset, IsEnabled);
             reference.WriteString(ModelSchema.MessageOffset, Message);
@@ -49,7 +48,7 @@ namespace Azure.Core.Pole.TestModels
         public static ClientResponseModel Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
-            if (reference.ReadTypeId() != ModelSchema.TypeId) throw new InvalidCastException();
+            if (reference.ReadTypeId() != ModelSchema.SchemaId) throw new InvalidCastException();
             return new(reference);
         }
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -77,7 +76,7 @@ namespace Azure.Core.Pole.TestModels
         public static ClientRountripingModel Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
-            if (reference.ReadTypeId() != ModelSchema.TypeId) throw new InvalidCastException();
+            if (reference.ReadTypeId() != ModelSchema.SchemaId) throw new InvalidCastException();
             return new(reference);
         }
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -92,7 +91,7 @@ namespace Azure.Core.Pole.TestModels
         {
             var heap = new PoleHeap(); // TODO: this should write directly to pipe, not to in memory buffers
             var reference = heap.Allocate(ModelSchema.Size);
-            reference.WriteSchemaId(ModelSchema.TypeId);
+            reference.WriteTypeId(ModelSchema.SchemaId);
             reference.WriteInt32(ModelSchema.RepeatCountOffset, RepeatCount);
             reference.WriteBoolean(ModelSchema.IsEnabledOffset, IsEnabled);
 
@@ -139,7 +138,7 @@ namespace Azure.Core.Pole.TestModels
         public static ServerRequestModel Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
-            if (reference.ReadTypeId() != HelloModelSchema.V1) throw new InvalidCastException();
+            if (reference.ReadTypeId() != ModelSchema.SchemaId) throw new InvalidCastException();
             return new(reference);
         }
         public static ServerRequestModel Deserialize(Stream stream)
@@ -164,7 +163,7 @@ namespace Azure.Core.Pole.TestModels
         public static ServerResponseModel Allocate(PoleHeap heap)
         {
             PoleReference reference = heap.Allocate(ModelSchema.Size);
-            reference.WriteSchemaId(ModelSchema.TypeId);
+            reference.WriteTypeId(ModelSchema.SchemaId);
             return new ServerResponseModel(reference);
         }
 

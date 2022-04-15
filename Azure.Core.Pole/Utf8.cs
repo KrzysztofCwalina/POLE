@@ -28,7 +28,7 @@ namespace Azure.Core.Pole
 
         public override string ToString()
         {
-            var bytes = _reference.ReadBytes(0);
+            var bytes = _reference.ReadByteBuffer(0);
             return bytes.ToStringAsciiNoAlloc();
         }
     }

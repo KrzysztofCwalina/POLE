@@ -113,7 +113,7 @@ namespace Azure.Core.Pole.Tests
         {
             int size = ClientServerSchema.GetSize(version);
             PoleReference reference = heap.Allocate(size);
-            reference.WriteSchemaId(ClientServerSchema.GetSchema(version));
+            reference.WriteTypeId(ClientServerSchema.GetSchema(version));
             return new ServerModel(reference);
         }
         public int Number

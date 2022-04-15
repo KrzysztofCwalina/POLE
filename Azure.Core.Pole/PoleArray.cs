@@ -67,8 +67,7 @@ namespace Azure.Core.Pole
                 }
                 else if(typeof(T) == typeof(string))
                 {
-                    var reference = _reference.ReadReference(itemOffset);
-                    var str = reference.ReadString();
+                    var str = _reference.ReadString(itemOffset);                    
                     return (T)(object)str;
 
                 }

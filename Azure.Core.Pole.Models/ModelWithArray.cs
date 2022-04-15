@@ -8,7 +8,7 @@ namespace Azure.Core.Pole.TestModels
 {
     internal struct ModelWithCollectionSchema
     {
-        public const ulong TypeId = 0xfe106fc3b2994232;
+        public const ulong SchemaId = 0xfe106fc3b2994200;
 
         public const int IntegersOffset = 16;
         public const int StringsOffset = 20;
@@ -27,7 +27,7 @@ namespace Azure.Core.Pole.TestModels
         public static ModelWithArray Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
-            if (reference.ReadTypeId() != ModelWithCollectionSchema.TypeId) throw new InvalidCastException();
+            if (reference.ReadTypeId() != ModelWithCollectionSchema.SchemaId) throw new InvalidCastException();
             return new (reference);
         } 
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -77,7 +77,7 @@ namespace Azure.Core.Pole.TestModels.Server
         public static ModelWithArray Allocate(PoleHeap heap)
         {
             PoleReference reference = heap.Allocate(ModelWithCollectionSchema.Size);
-            reference.WriteSchemaId(HelloModelSchema.V1);
+            reference.WriteTypeId(ModelWithCollectionSchema.SchemaId);
             return new ModelWithArray(reference);
         }
 

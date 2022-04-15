@@ -7,7 +7,7 @@ namespace Azure.Core.Pole.TestModels
 {
     internal struct HelloModelSchema
     {
-        public const ulong V1 = 0xfe106fc3b2994232; 
+        public const ulong SchemaId = 0xfe106fc3b2994200; 
 
         public const int RepeatCountOffset = 16;
         public const int IsEnabledOffset = 20;
@@ -24,7 +24,7 @@ namespace Azure.Core.Pole.TestModels
         public static HelloModel Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
-            if (reference.ReadTypeId() != HelloModelSchema.V1) throw new InvalidCastException();
+            if (reference.ReadTypeId() != HelloModelSchema.SchemaId) throw new InvalidCastException();
             return new (reference);
         } 
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -52,7 +52,7 @@ namespace Azure.Core.Pole.TestModels.Server
         public static HelloModel Allocate(PoleHeap heap)
         {
             PoleReference reference = heap.Allocate(HelloModelSchema.Size);
-            reference.WriteSchemaId(HelloModelSchema.V1);
+            reference.WriteTypeId(HelloModelSchema.SchemaId);
             return new HelloModel(reference);
         }
 
