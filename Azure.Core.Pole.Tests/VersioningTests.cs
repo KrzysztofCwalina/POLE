@@ -47,15 +47,27 @@ namespace Azure.Core.Pole.Tests
 
     internal struct ModelSchema
     {
-        public const ulong IdL = 0xfe106fc3b2994231;
-        public const ulong IdH = 0xa177d25283a579b5;
+        public const ulong V1 = 0xfe106fc3b2994231;
+        public const ulong V2 = 0xa177d25283a579b5;
 
-        public const int VersionOffset = 16; // TODO: can version be part of ID?
-        public const int NumberOffset = 18;
-        public const int MultiplierOffset = 22; // added in V2
+        public const int NumberOffset = 8;
+        public const int MultiplierOffset = 12; // added in V2
 
-        public const int SizeV1 = 22;
-        public const int SizeV2 = 26;
+        public const int SizeV1 = 12;
+        public const int SizeV2 = 16;
+
+        public static ulong GetSchema(ushort version)
+        {
+            if (version == 1) return V1;
+            if (version == 2) return V2;
+            throw new ArgumentOutOfRangeException();
+        }
+        public static int GetSize(ushort version)
+        {
+            if (version == 1) return SizeV1;
+            if (version == 2) return SizeV2;
+            throw new ArgumentOutOfRangeException();
+        }
     }
 
     public class ClientV1Model
@@ -67,7 +79,8 @@ namespace Azure.Core.Pole.Tests
         public static ClientV1Model Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
-            if (!reference.SchemaEquals(ModelSchema.IdL, ModelSchema.IdH)) throw new InvalidCastException();
+            var type = reference.ReadTypeId();
+            if (type != ModelSchema.V1 && type != ModelSchema.V2) throw new InvalidCastException();
             return new(reference);
         }
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -89,7 +102,8 @@ namespace Azure.Core.Pole.Tests
         public static ClientV2Model Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
-            if (!reference.SchemaEquals(ModelSchema.IdL, ModelSchema.IdH)) throw new InvalidCastException();
+            var type = reference.ReadTypeId();
+            if (type != ModelSchema.V1 && type != ModelSchema.V2) throw new InvalidCastException();
             return new(reference);
         }
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -103,11 +117,11 @@ namespace Azure.Core.Pole.Tests
         {
             get
             {
-                if (Version > 1) return _reference.ReadInt32(ModelSchema.MultiplierOffset);
+                if (Type == ModelSchema.V2) return _reference.ReadInt32(ModelSchema.MultiplierOffset);
                 return null;
             }
         }   
-        private ushort Version => _reference.ReadUInt16(ModelSchema.VersionOffset);
+        private ulong Type => _reference.ReadUInt64(0);
     }
 
     public class ServerVersionedModel
@@ -118,22 +132,15 @@ namespace Azure.Core.Pole.Tests
 
         public static ServerVersionedModel Allocate(PoleHeap heap, ushort version)
         {
-            int size = 0;
-            if (version == 1) size = ModelSchema.SizeV1;
-            else if (version == 2) size = ModelSchema.SizeV2;
-            else throw new ArgumentOutOfRangeException(nameof(version));
-
+            int size = ModelSchema.GetSize(version);
             PoleReference reference = heap.Allocate(size);
-            reference.WriteSchemaId(ModelSchema.IdL, ModelSchema.IdH);
-            reference.WriteUInt16(ModelSchema.VersionOffset, version);
+
+            ulong schemaId = ModelSchema.GetSchema(version);
+            reference.WriteUInt64(0, schemaId);
             return new ServerVersionedModel(reference);
         }
 
-        private ushort Version
-        {
-            get => _reference.ReadUInt16(ModelSchema.VersionOffset);
-            set => _reference.WriteUInt16(ModelSchema.VersionOffset, value);
-        }
+        private ulong Type => _reference.ReadUInt64(0);
         public int Number
         {
             get => _reference.ReadInt32(ModelSchema.NumberOffset);
@@ -145,13 +152,13 @@ namespace Azure.Core.Pole.Tests
         {
             get
             {
-                if (Version < 2) throw new InvalidOperationException("this version does not have Number");
+                if (Type == ModelSchema.V1) throw new InvalidOperationException("this version does not have Number");
                 return _reference.ReadInt32(ModelSchema.MultiplierOffset);
             }
 
             set
             {
-                if (Version < 2) throw new InvalidOperationException("this version does not have Number");
+                if (Type == ModelSchema.V1) throw new InvalidOperationException("this version does not have Number");
                 _reference.WriteInt32(ModelSchema.MultiplierOffset, value);
             }
         }

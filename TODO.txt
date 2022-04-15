@@ -1,10 +1,20 @@
-finish support for child types
-support generating client + server
-support dictionaries
-support for buffers (Span<byte>)
-support for converting from JSON
-support multi-segment heap
-support null references
-polymorphism?
-support other languages
-add editor browsable
+Pri 0
+- finish support for child types
+- support dictionaries
+
+Pri 1
+- can model variants be consolidated/simplified?
+- finish generator
+- support generating client + server
+- support other languages
+
+Pri 2
+- support for converting from JSON
+- support for buffers (Span<byte>)
+- support System.IO.Pipelines
+- support multi-segment heap
+- support null references
+- polymorphism?
+- add PoleWriter (forward only writer for trees) - what to do with strings. i.e. how to write both object and string?
+- add PoleReader (forward only reader)
+- add editor browsable

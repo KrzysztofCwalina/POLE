@@ -2,6 +2,7 @@ using NUnit.Framework;
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Azure.Core.Pole.Tests
 {
@@ -24,19 +25,19 @@ namespace Azure.Core.Pole.Tests
 
     class Client
     {
-        public ClientModel Get(ushort verion)
+        public ClientModel Get(ushort apiVersion)
         {
-            var stream = GetCore(verion);
+            var stream = MockedGet(apiVersion);
             var model = ClientModel.Deserialize(stream);
             return model;
         }
 
-        private Stream GetCore(ushort version)
+        private Stream MockedGet(ushort apiVersions)
         {
             var heap = new PoleHeap();
-            var model = ServerModel.Allocate(heap, version);
+            var model = ServerModel.Allocate(heap, apiVersions);
             model.Number = 5;
-            if (version > 1)
+            if (apiVersions > 1)
             {
                 model.Multiplier = 2;
             }
@@ -46,17 +47,30 @@ namespace Azure.Core.Pole.Tests
             return stream;
         }
     }
+
     internal struct ClientServerSchema
     {
-        public const ulong IdL = 0xfe106fc3b2994231;
-        public const ulong IdH = 0xa177d25283a579b5;
+        public const ulong V1 = 0xfe106fc3b2994231;
+        public const ulong V2 = 0xfe106fd3b2994231;
 
-        public const int VersionOffset = 16; // TODO: can version be part of ID?
-        public const int NumberOffset = 18;
-        public const int MultiplierOffset = 22; // added in V2
+        public const int NumberOffset = 16;
+        public const int MultiplierOffset = 20; // added in V2
 
-        public const int SizeV1 = 22;
-        public const int SizeV2 = 26;
+        public const int SizeV1 = 20;
+        public const int SizeV2 = 24;
+
+        public static ulong GetSchema(ushort version)
+        {
+            if (version == 1) return V1;
+            if (version == 2) return V2;
+            throw new ArgumentOutOfRangeException();
+        }
+        public static int GetSize(ushort version)
+        {
+            if (version == 1) return SizeV1;
+            if (version == 2) return SizeV2;
+            throw new ArgumentOutOfRangeException();
+        }
     }
 
     public class ClientModel
@@ -68,7 +82,8 @@ namespace Azure.Core.Pole.Tests
         internal static ClientModel Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
-            if (!reference.SchemaEquals(ClientServerSchema.IdL, ClientServerSchema.IdH)) throw new InvalidCastException();
+            var type = reference.ReadTypeId();
+            if (type != ClientServerSchema.V1 && type != ClientServerSchema.V2) throw new InvalidCastException();
             return new(reference);
         }
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -82,11 +97,10 @@ namespace Azure.Core.Pole.Tests
         {
             get
             {
-                if (Version > 1) return _reference.ReadInt32(ClientServerSchema.MultiplierOffset);
-                return null;
+                if (_reference.ReadTypeId() == ClientServerSchema.V1) return null;
+                return _reference.ReadInt32(ClientServerSchema.MultiplierOffset);
             }
         }   
-        private ushort Version => _reference.ReadUInt16(ClientServerSchema.VersionOffset);
     }
 
     public class ServerModel
@@ -97,21 +111,10 @@ namespace Azure.Core.Pole.Tests
 
         public static ServerModel Allocate(PoleHeap heap, ushort version)
         {
-            int size = 0;
-            if (version == 1) size = ClientServerSchema.SizeV1;
-            else if (version == 2) size = ClientServerSchema.SizeV2;
-            else throw new ArgumentOutOfRangeException(nameof(version));
-
+            int size = ClientServerSchema.GetSize(version);
             PoleReference reference = heap.Allocate(size);
-            reference.WriteSchemaId(ModelSchema.IdL, ModelSchema.IdH);
-            reference.WriteUInt16(ModelSchema.VersionOffset, version);
+            reference.WriteSchemaId(ClientServerSchema.GetSchema(version));
             return new ServerModel(reference);
-        }
-
-        private ushort Version
-        {
-            get => _reference.ReadUInt16(ClientServerSchema.VersionOffset);
-            set => _reference.WriteUInt16(ClientServerSchema.VersionOffset, value);
         }
         public int Number
         {
@@ -123,14 +126,15 @@ namespace Azure.Core.Pole.Tests
         {
             get
             {
-                if (Version < 2) throw new InvalidOperationException("this version does not have Number");
-                return _reference.ReadInt32(ClientServerSchema.MultiplierOffset);
+                if (_reference.ReadTypeId() != ClientServerSchema.V1) return _reference.ReadInt32(ClientServerSchema.MultiplierOffset); 
+                else throw new InvalidOperationException("this version does not have Number");
+
             }
 
             set
             {
-                if (Version < 2) throw new InvalidOperationException("this version does not have Number");
-                _reference.WriteInt32(ClientServerSchema.MultiplierOffset, value);
+                if (_reference.ReadTypeId() != ClientServerSchema.V1) _reference.WriteInt32(ClientServerSchema.MultiplierOffset, value);
+                else throw new InvalidOperationException("this version does not have Number");
             }
         }
     }

@@ -29,18 +29,8 @@ namespace Azure.Core.Pole
 
         public ulong ReadUInt64(int offset) => BinaryPrimitives.ReadUInt64LittleEndian(_heap.GetBytes(_address + offset));
         public void WriteUInt64(int offset, ulong value) => BinaryPrimitives.WriteUInt64LittleEndian(_heap.GetBytes(_address + offset), value);
-
-        public bool SchemaEquals(ulong idL, ulong idH)
-        {
-            if (ReadUInt64(0) != idL) return false;
-            if (ReadUInt64(sizeof(ulong)) != idH) return false;
-            return true;
-        }
-        public void WriteSchemaId(ulong idL, ulong idH)
-        {
-            WriteUInt64(0, idL);
-            WriteUInt64(sizeof(ulong), idH);
-        }
+        public ulong ReadTypeId() => ReadUInt64(0);
+        public void WriteSchemaId(ulong typeId) => WriteUInt64(0, typeId);
 
         public bool ReadBoolean(int offset) => _heap[_address + offset] != 0;
         public void WriteBoolean(int offset, bool value) => _heap[_address + offset] = value ? (byte)1 : (byte)0;

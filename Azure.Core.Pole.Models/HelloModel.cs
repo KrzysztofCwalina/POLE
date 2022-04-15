@@ -2,14 +2,12 @@
 using System;
 using System.ComponentModel;
 using System.IO;
-using System.Runtime.InteropServices.ComTypes;
 
 namespace Azure.Core.Pole.TestModels
 {
     internal struct HelloModelSchema
     {
-        public const ulong IdL = 0xfe106fc3b2994232; // TODO: can Id be just one ulong? Today it's a GUID
-        public const ulong IdH = 0xa177d25283a579b6;
+        public const ulong V1 = 0xfe106fc3b2994232; 
 
         public const int RepeatCountOffset = 16;
         public const int IsEnabledOffset = 20;
@@ -26,7 +24,7 @@ namespace Azure.Core.Pole.TestModels
         public static HelloModel Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
-            if (!reference.SchemaEquals(HelloModelSchema.IdL, HelloModelSchema.IdH)) throw new InvalidCastException();
+            if (reference.ReadTypeId() != HelloModelSchema.V1) throw new InvalidCastException();
             return new (reference);
         } 
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -54,7 +52,7 @@ namespace Azure.Core.Pole.TestModels.Server
         public static HelloModel Allocate(PoleHeap heap)
         {
             PoleReference reference = heap.Allocate(HelloModelSchema.Size);
-            reference.WriteSchemaId(HelloModelSchema.IdL, HelloModelSchema.IdH);
+            reference.WriteSchemaId(HelloModelSchema.V1);
             return new HelloModel(reference);
         }
 

@@ -68,8 +68,7 @@ namespace Azure.Core.Pole
             };
             return heap;
         }
-        public IList<T> AllocateArray<T>(int size) => PoleArray<T>.Allocate(this, size);
-
+        
         public T Allocate<T>()
         {
             var type = typeof(T);

@@ -7,10 +7,9 @@ namespace Azure.Core.Pole.TestModels
 {
     internal struct ModelSchema
     {
-        public const ulong IdL = 0xfe106fc3b2994232;
-        public const ulong IdH = 0xa177d25283a579b6;
-        public const int IdOffset = 0;
+        public const ulong TypeId = 0xfe106fc3b2994232;
 
+        public const int IdOffset = 0;
         public const int RepeatCountOffset = 16;
         public const int IsEnabledOffset = 20;
         public const int MessageOffset = 21;
@@ -27,14 +26,14 @@ namespace Azure.Core.Pole.TestModels
         {
             var heap = new PoleHeap(); // TODO: this should write to stack spans, then to stream
             var reference = heap.Allocate(ModelSchema.Size);
-            reference.WriteSchemaId(ModelSchema.IdL, ModelSchema.IdH);
+            reference.WriteSchemaId(ModelSchema.TypeId);
             reference.WriteInt32(ModelSchema.RepeatCountOffset, RepeatCount);
             reference.WriteBoolean(ModelSchema.IsEnabledOffset, IsEnabled);
             reference.WriteString(ModelSchema.MessageOffset, Message);
             heap.WriteTo(stream);
         }
 
-        // TODO: should the fileds be on the heap? It would work for flat objects, but not if sub-objects are new'able.
+        // TODO: should the fields be on the heap? It would work for flat objects, but not if sub-objects are new'able.
         public int RepeatCount { get; set; }
         public bool IsEnabled { get; set; }
         public string Message { get; set; }
@@ -50,7 +49,7 @@ namespace Azure.Core.Pole.TestModels
         public static ClientResponseModel Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
-            if (!reference.SchemaEquals(ModelSchema.IdL, ModelSchema.IdH)) throw new InvalidCastException();
+            if (reference.ReadTypeId() != ModelSchema.TypeId) throw new InvalidCastException();
             return new(reference);
         }
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -78,7 +77,7 @@ namespace Azure.Core.Pole.TestModels
         public static ClientRountripingModel Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
-            if (!reference.SchemaEquals(ModelSchema.IdL, ModelSchema.IdH)) throw new InvalidCastException();
+            if (reference.ReadTypeId() != ModelSchema.TypeId) throw new InvalidCastException();
             return new(reference);
         }
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -91,9 +90,9 @@ namespace Azure.Core.Pole.TestModels
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void Serialize(Stream stream)
         {
-            var heap = new PoleHeap(); // TODO: this should write directly to stream, not to in memory buffers
+            var heap = new PoleHeap(); // TODO: this should write directly to pipe, not to in memory buffers
             var reference = heap.Allocate(ModelSchema.Size);
-            reference.WriteSchemaId(ModelSchema.IdL, ModelSchema.IdH);
+            reference.WriteSchemaId(ModelSchema.TypeId);
             reference.WriteInt32(ModelSchema.RepeatCountOffset, RepeatCount);
             reference.WriteBoolean(ModelSchema.IsEnabledOffset, IsEnabled);
 
@@ -140,7 +139,7 @@ namespace Azure.Core.Pole.TestModels
         public static ServerRequestModel Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
-            if (!reference.SchemaEquals(HelloModelSchema.IdL, HelloModelSchema.IdH)) throw new InvalidCastException();
+            if (reference.ReadTypeId() != HelloModelSchema.V1) throw new InvalidCastException();
             return new(reference);
         }
         public static ServerRequestModel Deserialize(Stream stream)
@@ -165,7 +164,7 @@ namespace Azure.Core.Pole.TestModels
         public static ServerResponseModel Allocate(PoleHeap heap)
         {
             PoleReference reference = heap.Allocate(ModelSchema.Size);
-            reference.WriteSchemaId(ModelSchema.IdL, ModelSchema.IdH);
+            reference.WriteSchemaId(ModelSchema.TypeId);
             return new ServerResponseModel(reference);
         }
 

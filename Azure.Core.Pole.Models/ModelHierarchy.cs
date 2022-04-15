@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Azure.Core.Pole.TestModels
 {
-    public struct HierarchicalModel : IObject // TODO: how can we remove this?
+    public struct ModelHierarchy : IObject // TODO: how can we remove this?
     {
         const int FooOffset = 0;                        // int
         const int BarOffset = FooOffset + sizeof(int);  // bool
@@ -15,11 +15,10 @@ namespace Azure.Core.Pole.TestModels
         readonly PoleReference _reference;
 
         PoleReference IObject.Reference => _reference; 
-        private HierarchicalModel(PoleReference reference) => _reference = reference;
+        private ModelHierarchy(PoleReference reference) => _reference = reference;
 
-        // TODO: it would be best if these were on the heap, i.e. heap.Allocate<T>();
-        public static HierarchicalModel Allocate(PoleHeap heap) => new (heap.Allocate(HierarchicalModel.Size));
-        public static HierarchicalModel Deserialize(PoleHeap heap) => new (heap.GetAt(0));
+        public static ModelHierarchy Allocate(PoleHeap heap) => new (heap.Allocate(ModelHierarchy.Size));
+        public static ModelHierarchy Deserialize(PoleHeap heap) => new (heap.GetAt(0));
 
         public int Foo
         {
@@ -39,7 +38,7 @@ namespace Azure.Core.Pole.TestModels
             set => _reference.WriteUtf8(BagOffset, value);
         }
 
-        public ChildModel Baz
+        public ChildModel Child
         {
             get => new ChildModel(_reference.ReadReference(BazOffset));
             set => _reference.WriteObject(BazOffset, value);

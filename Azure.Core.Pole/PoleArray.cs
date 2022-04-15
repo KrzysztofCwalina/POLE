@@ -1,49 +1,54 @@
 ﻿using System;
-using System.Buffers.Binary;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace Azure.Core.Pole
 {
-    internal class PoleArray<T> : IObject, IList<T>, IReadOnlyList<T>
+    public class PoleArray<T> : IReadOnlyList<T>
     {
+        const int LengthOffset = 0;
+        const int ItemSizeOffset = 4; // TODO: we don't need size both here and in T. Maybe we should just encode the item schema ID?
+        const int ItemsOffset = 8;
+
         readonly PoleReference _reference;
-        readonly int _length;
+        readonly PoleType _itemType;
 
-        PoleReference IObject.Reference => _reference;
-
-        public PoleArray(PoleReference reference)
+        public PoleArray(PoleReference reference, PoleType itemType)
         {
+            // TODO: verify that the reference is indeed PoleArray<T>
             _reference = reference;
-            _length = _reference.ReadInt32(0);
+            _itemType = itemType;
         }
+        public PoleReference Reference => _reference;
 
         public static PoleArray<T> Allocate(PoleHeap heap, int length)
         {
-            var bufferLength = sizeof(int) * length + sizeof(int);
+            var type = new PoleType(typeof(T));
+            var bufferLength = type.Size * length + sizeof(int) + sizeof(int);
             var reference = heap.Allocate(bufferLength);
-            Span<byte> buffer = heap.GetBytes(reference.Address, bufferLength);
-            BinaryPrimitives.WriteInt32LittleEndian(buffer, length);
-            return new PoleArray<T>(reference);
+            reference.WriteInt32(LengthOffset, length);
+            reference.WriteInt32(ItemSizeOffset, type.Size);
+            return new PoleArray<T>(reference, type);
         }
 
         public T this[int index]
         {
             set
             {
-                if (index >= _length) throw new IndexOutOfRangeException();
+                if (index >= Count) throw new IndexOutOfRangeException();
+
                 if (typeof(T) == typeof(int))
                 {
-                    int i4 = Unsafe.As<T, int>(ref Unsafe.AsRef(value));
-                    _reference.WriteInt32(sizeof(int) + index * sizeof(int), i4);
+                    int itemOffset = sizeof(int) + index * sizeof(int);
+                    _reference.WriteInt32(itemOffset, (int)(object)value);
                 }
                 else if (typeof(IObject).IsAssignableFrom(typeof(T)))
                 {
                     IObject iobj = value as IObject;
                     var reference = iobj.Reference;
-                    _reference.WriteInt32(sizeof(int) + index * sizeof(int), reference.Address);
+                    int itemOffset = ItemSize * index + ItemsOffset;
+                    _reference.WriteInt32(itemOffset, reference.Address);
                 }
                 else
                 {
@@ -53,7 +58,7 @@ namespace Azure.Core.Pole
             }
             get
             {
-                if (index >= _length) throw new IndexOutOfRangeException();
+                if (index >= Count) throw new IndexOutOfRangeException();
                 if (typeof(T) == typeof(int))
                 {
                     int value = _reference.ReadInt32(sizeof(int) + index * sizeof(int));
@@ -62,10 +67,9 @@ namespace Azure.Core.Pole
                 }
                 else if (typeof(IObject).IsAssignableFrom(typeof(T)))
                 {
-                    // TODO: can reflection be eliminated with static interfaces?
-                    int address = _reference.ReadInt32(sizeof(int) + index * sizeof(int));
-                    var reference = new PoleReference(_reference.Heap, address);
-                    return (T)_reference.Heap.Deserialize(reference, typeof(T));
+                    int itemAddress = _reference.ReadInt32(sizeof(int) + index * sizeof(int));
+                    var reference = new PoleReference(_reference.Heap, itemAddress);
+                    return (T)_reference.Heap.Deserialize(reference, typeof(T)); // TODO: can reflection be eliminated?
                 }
                 else
                 {
@@ -75,60 +79,45 @@ namespace Azure.Core.Pole
             }
         }
 
-        public int Count => _length;
+        public int Count => _reference.ReadInt32(LengthOffset);
 
-        #region NYI_Interface
-        int IList<T>.IndexOf(T item)
+        private int ItemSize => _reference.ReadInt32(ItemSizeOffset);
+        private IEnumerator<T> GetEnumeratorCore() => new Enumerator(this);
+        class Enumerator : IEnumerator<T>
         {
-            throw new NotImplementedException();
-        }
+            int _index = -1;
+            PoleArray<T> _array;
 
-        bool ICollection<T>.IsReadOnly => throw new NotImplementedException();
+            public Enumerator(PoleArray<T> array)
+            {
+                _index = 0;
+                _array = array;
+            }
 
-        void IList<T>.Insert(int index, T item)
-        {
-            throw new NotImplementedException();
-        }
+            public T Current
+            {
+                get
+                {
+                    if (_index == -1) throw new InvalidOperationException("call MoveNext first");
+                    return _array[_index];
+                }
+            } 
 
-        void IList<T>.RemoveAt(int index)
-        {
-            throw new NotImplementedException();
-        }
+            public bool MoveNext()
+            {
+                if (_index + 1 < _array.Count)
+                {
+                    _index++;
+                    return true;
+                }
+                return false;
+            }
 
-        void ICollection<T>.Add(T item)
-        {
-            throw new NotImplementedException();
+            object IEnumerator.Current => _array[_index];
+            public void Dispose() { }
+            public void Reset() => _index = -1;
         }
-
-        void ICollection<T>.Clear()
-        {
-            throw new NotImplementedException();
-        }
-
-        bool ICollection<T>.Contains(T item)
-        {
-            throw new NotImplementedException();
-        }
-
-        void ICollection<T>.CopyTo(T[] array, int arrayIndex)
-        {
-            throw new NotImplementedException();
-        }
-
-        bool ICollection<T>.Remove(T item)
-        {
-            throw new NotImplementedException();
-        }
-
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
-        #endregion
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => GetEnumeratorCore();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorCore();
     }
 }
