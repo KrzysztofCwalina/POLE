@@ -12,24 +12,25 @@ namespace Azure.Core.Pole
         const int ItemsOffset = 8;
 
         readonly PoleReference _reference;
-        readonly PoleType _itemType;
 
-        public PoleArray(PoleReference reference, PoleType itemType)
+        public PoleArray(PoleReference reference)
         {
             // TODO: verify that the reference is indeed PoleArray<T>
             _reference = reference;
-            _itemType = itemType;
         }
         public PoleReference Reference => _reference;
 
         public static PoleArray<T> Allocate(PoleHeap heap, int length)
         {
-            var type = new PoleType(typeof(T));
-            var bufferLength = type.Size * length + sizeof(int) + sizeof(int);
+            if (!PoleType.TryGetSize(typeof(T), out int size))
+            {
+                throw new InvalidOperationException($"{typeof(T)} is not a POLE type.");
+            }
+            var bufferLength = size * length + sizeof(int) + sizeof(int);
             var reference = heap.Allocate(bufferLength);
             reference.WriteInt32(LengthOffset, length);
-            reference.WriteInt32(ItemSizeOffset, type.Size);
-            return new PoleArray<T>(reference, type);
+            reference.WriteInt32(ItemSizeOffset, size);
+            return new PoleArray<T>(reference);
         }
 
         public T this[int index]
@@ -79,8 +80,7 @@ namespace Azure.Core.Pole
                 }
                 else
                 {
-                    // should this check be done at construction?
-                    throw new NotSupportedException($"type {typeof(T)} not supported");
+                    return PoleType.Deserialize<T>(new PoleReference(_reference.Heap, itemOffset));
                 }
             }
         }

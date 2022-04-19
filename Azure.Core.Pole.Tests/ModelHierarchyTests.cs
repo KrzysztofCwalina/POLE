@@ -15,7 +15,7 @@ namespace Azure.Core.Pole.Tests
             {
                 using PoleHeap heap = new PoleHeap();
 
-                ModelHierarchy parent = ModelHierarchy.Allocate(heap);
+                ParentModel parent = ParentModel.Allocate(heap);
                 ChildModel child = ChildModel.Allocate(heap);
                 parent.Child = child; // this will be simplified after https://github.com/dotnet/roslyn/issues/45284 is fixed.
 
@@ -30,11 +30,11 @@ namespace Azure.Core.Pole.Tests
                 stream.Position = 0;
                 using var heap = PoleHeap.ReadFrom(stream);
 
-                ModelHierarchy model = ModelHierarchy.Deserialize(heap);
-                Assert.AreEqual(32, model.Foo);
-                Assert.AreEqual(true, model.Bar);
-                Assert.AreEqual(true, model.Child.Bat);
-                Assert.AreEqual("Hello World!", model.Bag.ToString());
+                ParentModel deserializedParent = ParentModel.Deserialize(heap);
+                Assert.AreEqual(32, deserializedParent.Foo);
+                Assert.AreEqual(true, deserializedParent.Bar);
+                Assert.AreEqual(true, deserializedParent.Child.Bat);
+                Assert.AreEqual("Hello World!", deserializedParent.Bag.ToString());
             }
         }
     }

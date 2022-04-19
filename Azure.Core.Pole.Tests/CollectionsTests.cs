@@ -56,37 +56,63 @@ namespace Azure.Core.Pole.Tests
             }
             {
                 using PoleHeap heap = PoleHeap.ReadFrom(stream);
-                var strings = new PoleArray<string>(heap.GetAt(0), new PoleType(typeof(string)));
+                var strings = new PoleArray<string>(heap.GetAt(0));
                 var s1 = strings[0];
                 var s2 = strings[1];
                 Assert.AreEqual("ABC", s1);
                 Assert.AreEqual("DEF", s2);
             }
         }
-        //[Test]
-        //public void Dictionary()
-        //{
-        //    var stream = new MemoryStream();
 
-        //    // write to stream
-        //    {
-        //        using PoleHeap heap = new PoleHeap();
+        [Test]
+        public void StructArray()
+        {
+            var stream = new MemoryStream();
+            {
+                using PoleHeap heap = new();
+                var utf8 = PoleArray<ServerStructModel>.Allocate(heap, 2);
+                utf8[0].Set(1, 2);
+                utf8[1].Set(3, 4);
 
-        //        var model = TestModels.Server.ModelWithMap.Allocate(heap);
-        //        IDictionary<string, int> map = heap.AllocateMap<string, int>(2);
-        //        model.Map = map;
+                heap.WriteTo(stream);
+                stream.Position = 0;
+            }
+            {
+                using PoleHeap heap = PoleHeap.ReadFrom(stream);
+                var strings = new PoleArray<ServerStructModel>(heap.GetAt(0));
+                var s1 = strings[0];
+                var s2 = strings[1];
+                Assert.AreEqual(1, s1.A);
+                Assert.AreEqual(2, s1.B);
+                Assert.AreEqual(3, s2.A);
+                Assert.AreEqual(4, s2.B);
+            }
+        }
 
-        //        map["foo"] = 5;
-        //        map["bar"] = 345;               
-        //    }
+        readonly struct ServerStructModel
+        {
+            public const int AOffset = 0;
+            public const int BOffset = 4;
+            const int Size = 8;
 
-        //    {
-        //        stream.Position = 0;
-        //        using var heap = PoleHeap.ReadFrom(stream);
-        //        ModelWithMap model = ModelWithMap.Deserialize(heap);
-        //        Assert.AreEqual(5, model.Map["foo"]);
-        //        Assert.AreEqual(5, model.Map["bar"]);
-        //    }
-        //}
+            readonly PoleReference _reference;
+
+            private ServerStructModel(PoleReference reference) => _reference = reference;
+
+            public void Set(int a, int b) {
+                _reference.WriteInt32(AOffset, a);
+                _reference.WriteInt32(BOffset, b);
+            }
+            public int A
+            {
+                get => _reference.ReadInt32(AOffset);
+                set => _reference.WriteInt32(AOffset, value);
+            }
+            public int B
+            {
+                get => _reference.ReadInt32(BOffset);
+                set => _reference.WriteInt32(BOffset, value);
+            }
+        }
     }
 }

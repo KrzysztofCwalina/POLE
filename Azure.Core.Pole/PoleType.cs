@@ -1,33 +1,39 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
+using System.Reflection;
 
 namespace Azure.Core.Pole
 {
-    public readonly struct PoleType
+    public static class PoleType
     {
-        readonly Type _type;
-        readonly int _size;
-
-        public PoleType(Type type)
+        public static bool TryGetSize(Type type, out int size)
         {
-            if (!TryGetSize(type, out _size)) throw new NotSupportedException($"Type {type.Name} is not supported");
-            _type = type;
-        }
-
-        public int Size => _size;
-
-        public static bool TryGetSize(Type poleType, out int size)
-        {
-            if (poleType == typeof(int)) size = 4;
-            else if (poleType == typeof(bool)) size = 1;
-            else if (poleType == typeof(string)) size = 4;
-            else if (poleType == typeof(Utf8)) size = 4;
+            if (type == typeof(int)) size = 4;
+            else if (type == typeof(bool)) size = 1;
+            else if (type == typeof(string)) size = 4;
+            else if (type == typeof(Utf8)) size = 4;
             else
             {
+                var sizeField = type.GetField("Size", BindingFlags.NonPublic | BindingFlags.NonPublic | BindingFlags.Static);
+                if (sizeField == null || sizeField.FieldType != typeof(int)) goto failed;
+                size = (int)sizeField.GetValue(null);
+                return true;
+
+                failed:
                 size = 0;
                 return false;
             }
             return true;
+        }
+
+        static readonly Type[] s_ctorParams = new Type[] { typeof(PoleReference) };
+        public static T Deserialize<T>(PoleReference reference)
+        {
+            var type = typeof(T);
+            var ctor = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, s_ctorParams, null);
+            if (ctor == null) throw new InvalidOperationException($"{typeof(T)} is not a POLE type.");
+            return (T)ctor.Invoke(new object[] { reference });
         }
     }
 }

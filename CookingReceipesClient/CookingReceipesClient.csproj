@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Core" Version="1.24.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Azure.Core.Pole\Azure.Core.Pole.csproj" />
   </ItemGroup>
 

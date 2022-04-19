@@ -3,12 +3,13 @@ using System;
 
 namespace Azure.Core.Pole.TestModels.Definitions
 {
-    [Serializable]
-    [Generate(ModelVariants.ServerResponse | ModelVariants.ClientOutput)]
+    [Serializable, Deserializable]
     public class HelloModel
     {
+        public HelloModel() { }
+
         public int RepeatCount { get; }
-        public string Message { get; }
+        public string Message { get; set; }
 
         [Version(2)]
         public bool IsEnabled { get; }

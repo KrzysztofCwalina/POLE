@@ -42,7 +42,7 @@ namespace Azure.Core.Pole.TestModels
             get
             {
                 var reference = _reference.ReadReference(ModelWithCollectionSchema.IntegersOffset);
-                if (_integers == null) _integers = new PoleArray<int>(reference, new PoleType(typeof(int)));
+                if (_integers == null) _integers = new PoleArray<int>(reference);
                 return _integers;
             }
         }
@@ -52,7 +52,7 @@ namespace Azure.Core.Pole.TestModels
             get
             {
                 var reference = _reference.ReadReference(ModelWithCollectionSchema.StringsOffset);
-                if (_strings == null) _strings = new PoleArray<string>(reference, new PoleType(typeof(string))); // TODO: string should not be passed separatelly
+                if (_strings == null) _strings = new PoleArray<string>(reference);
                 return _strings;
             }
         }

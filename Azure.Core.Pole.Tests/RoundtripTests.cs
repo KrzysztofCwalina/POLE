@@ -13,7 +13,7 @@ namespace Azure.Core.Pole.Tests
 
             // client request
             {
-                ClientRequestModel model = new ClientRequestModel();
+                ClientInputModel model = new ClientInputModel();
                 model.Message = "Hello";
                 model.IsEnabled = true;
                 model.RepeatCount = 5;

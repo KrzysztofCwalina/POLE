@@ -4,107 +4,170 @@ using System.Reflection;
 
 namespace Azure.Core.Pole.Tooling
 {
-    public class GenerateAttribute : Attribute
-    {
-        public GenerateAttribute(ModelVariants variants) => Variants = variants;
-
-        public ModelVariants Variants { get; private set; }
-    }
-
-    [Flags]
-    public enum ModelVariants
-    {
-        ClientInput = 1,
-        ClientOutput = 2,
-        ClinetRoundtrip = 4,
-        ServerRequest = 8,
-        ServerResponse = 16,
-    }
-
     public class PoleGenerator
     {
-        public void Generate(Type type, Stream stream, bool serverSide = false)
+        public void GenerateClientLibrary(Type type, string folder)
         {
+            if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+            var filename = Path.Combine(folder, type.Name + ".cs");
+            using var writer = new SourceWriter(filename);
 
-            string visibility = serverSide ? "internal" : "public";
+            GenerateClientType(type, writer);
 
+            GenerateClientOptionsType(type, folder);
+        }
+
+        private void GenerateClientOptionsType(Type type, string folder)
+        {
+            var filename = Path.Combine(folder, type.Name + "Options.cs");
+            using var writer = new SourceWriter(filename);
+
+            writer.WriteLine("using Azure;");
+            writer.WriteLine("using Azure.Core;");
+            writer.WriteLine();
+
+            writer.WriteLine($"namespace {type.Namespace}");
+            writer.WriteLine("{");
+            writer.Indent++;
+
+            writer.WriteLine($"public class {type.Name}Options : ClientOptions");
+            writer.WriteLine("{");
+            writer.Indent++;
+
+            writer.Indent--;
+            writer.WriteLine("}"); // EOT
+
+            writer.Indent--;
+            writer.WriteLine("}"); // EON
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns>list of dependencies</returns>
+        private Type[] GenerateClientType(Type type, SourceWriter writer)
+        {
+            writer.WriteLine("using Azure;");
+            writer.WriteLine("using Azure.Core;");
+            writer.WriteLine("using Azure.Core.Pipeline;");
+            writer.WriteLine();
+
+            writer.WriteLine($"namespace {type.Namespace}");
+            writer.WriteLine("{");
+            writer.Indent++;
+
+            writer.WriteLine($"public partial class {type.Name}");
+            writer.WriteLine("{");
+            writer.Indent++;
+
+            writer.WriteLine("private readonly HttpPipeline _pipeline;");
+            writer.WriteLine();
+
+            // ctor
+            writer.WriteLine($"public {type.Name}({type.Name}Options options = default)");
+            writer.WriteLine("{");
+            writer.Indent++;
+            writer.WriteLine("_pipeline = HttpPipelineBuilder.Build(options);");
+            writer.Indent--;
+            writer.WriteLine("}");
+
+            foreach (var member in type.GetMembers())
+            {
+                                                                                    
+            }
+            writer.Indent--;
+            
+            writer.WriteLine("}"); // EOT
+
+            writer.Indent--;
+            writer.WriteLine("}"); // EON
+
+            return Array.Empty<Type>();
+        }
+
+        public void GenerateService(Type type, string folder)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void GenerateModel(Type type, Stream stream)
+        {
             if (!type.Namespace.EndsWith("Definitions")) throw new NotSupportedException();
             var modelNamespace = type.Namespace.Substring(0, type.Namespace.Length - ".Definitions".Length);
-            if (serverSide)
-            {
-                modelNamespace += ".Server";
-            }
-            var writer = new StreamWriter(stream);
+            string visibility = type.IsVisible ? "public" : "internal";
+            var writer = new SourceWriter(new StreamWriter(stream));
 
-            string indent = "";
+            var allocatable = type.GetCustomAttribute<AllocateAttribute>();
+            var deserializable = type.GetCustomAttribute<DeserializableAttribute>();
+            var serializable = type.GetCustomAttribute<SerializableAttribute>();
 
             writer.WriteLine("using Azure.Core.Pole;");
             writer.WriteLine("using System;");
             writer.WriteLine("");
             writer.WriteLine($"namespace {modelNamespace}");
             writer.WriteLine("{");
+            writer.Indent++;
 
-            indent += "    ";
-            writer.WriteLine($"{indent}public struct {type.Name}");
-            writer.WriteLine($"{indent}{{");
-            indent += "    ";
+            writer.WriteLine($"public struct {type.Name}");
+            writer.WriteLine($"{{");
+            writer.Indent++;
 
-            writer.WriteLine($"{indent}private readonly PoleReference _reference;");
-            writer.WriteLine($"{indent}private {type.Name}(PoleReference reference) => _reference = reference;");
+            writer.WriteLine($"private readonly PoleReference _reference;");
+            writer.WriteLine($"private {type.Name}(PoleReference reference) => _reference = reference;");
             writer.WriteLine();
 
             int offset = 0;
             foreach (var property in type.GetProperties())
             {
-                writer.WriteLine($"{indent}const int __{property.Name}Offset = {offset};");
+                writer.WriteLine($"const int __{property.Name}Offset = {offset};");
                 var propertyType = property.PropertyType;
                 offset += GetTypeSize(propertyType);
             }
-            if (serverSide)
-            {
-                writer.WriteLine($"{indent}const int __Size = {offset};");
-            }
+            writer.WriteLine($"const int __Size = {offset};");
             writer.WriteLine();
 
-            if (serverSide)
+            if (allocatable != null)
             {
-                writer.WriteLine($"{indent}internal static {type.Name} Allocate(PoleHeap heap) => new (heap.Allocate({type.Name}.__Size));");
+                writer.WriteLine($"internal static {type.Name} Allocate(PoleHeap heap) => new (heap.Allocate({type.Name}.__Size));");
             }
 
-            writer.WriteLine($"{indent}internal static {type.Name} Deserialize(PoleReference reference) => new (reference);");
+            writer.WriteLine($"internal static {type.Name} Deserialize(PoleReference reference) => new (reference);");
             writer.WriteLine();
 
             foreach (var property in type.GetProperties())
             {
                 var propertyType = property.PropertyType;
-                writer.WriteLine($"{indent}public {GetTypeAlias(propertyType)} {property.Name}");
-                writer.WriteLine($"{indent}{{");
-                indent += "    ";
+                writer.WriteLine($"public {GetTypeAlias(propertyType)} {property.Name}");
+                writer.WriteLine($"{{");
+                writer.Indent++;
 
-                writer.WriteLine($"{indent}get => _reference.Read{GetTypeName(property.PropertyType)}(__{property.Name}Offset);");
-
-                if (serverSide)
+                if (property.CanRead)
                 {
-                    writer.WriteLine($"{indent}set => _reference.Write{GetTypeName(property.PropertyType)}(__{property.Name}Offset, value);");
+                    writer.WriteLine($"get => _reference.Read{GetTypeName(property.PropertyType)}(__{property.Name}Offset);");
                 }
 
-                indent = indent.Substring(4);
-                writer.WriteLine($"{indent}}}");
+                if (property.CanWrite)
+                {
+                    writer.WriteLine($"set => _reference.Write{GetTypeName(property.PropertyType)}(__{property.Name}Offset, value);");
+                }
+
+                writer.Indent--;
+                writer.WriteLine($"}}");
             }
 
-            indent = indent.Substring(4);
-            writer.WriteLine($"{indent}}}");
+            writer.Indent--;
+            writer.WriteLine($"}}");
             writer.WriteLine("}");
             writer.Flush();
         }
-        public void Generate(Assembly definitions, Stream stream, bool serverSide = false)
+        public void Generate(Assembly definitions, Stream stream)
         {
             Type[] types = definitions.GetTypes();
             foreach(var type in types)
             {
                 if (type.IsPublic && type.IsSerializable)
                 {
-                    Generate(type, stream, serverSide);
+                    GenerateModel(type, stream);
                 }
             }
         }
@@ -134,12 +197,5 @@ namespace Azure.Core.Pole.Tooling
             if (type == typeof(bool)) return "Boolean";
             throw new NotSupportedException();
         }
-    }
-
-    public class VersionAttribute : Attribute
-    {
-        public VersionAttribute(int version) => Version = version;
-
-        public int Version { get; private set; }
     }
 }

@@ -1,4 +1,7 @@
 Pri 0
+- object array
+- alow for composing objects, i.e. object inline in anothere object
+- allow arrays be inline in objects
 - finish support for child types
 - support dictionaries
 

@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Pipelines;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -141,6 +142,15 @@ namespace Azure.Core.Pole
             stream.WriteByte((byte)(_free >> 24));
             stream.Write(_memory.Slice(0, _free), cancellationToken);
             stream.Flush();
+        }
+
+        public long WriteTo(PipeWriter writer)
+        {
+            var span = writer.GetSpan(_free + 4);
+            BinaryPrimitives.WriteInt32LittleEndian(span, _free);
+            _memory.Span.Slice(0, _free).CopyTo(span.Slice(4));
+            writer.Advance(_free);
+            return _free;
         }
     }
 }

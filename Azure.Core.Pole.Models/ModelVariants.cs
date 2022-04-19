@@ -16,9 +16,9 @@ namespace Azure.Core.Pole.TestModels
     }
 
     // used on the client to compose requests, aka input model
-    public class ClientRequestModel
+    public class ClientInputModel
     {
-        public ClientRequestModel() { }
+        public ClientInputModel() { }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void Serialize(Stream stream)
@@ -39,20 +39,20 @@ namespace Azure.Core.Pole.TestModels
     }
 
     // used by the client to parse server responses, aka output model
-    public readonly struct ClientResponseModel
+    public readonly struct ClientOutputModel
     {
         private readonly PoleReference _reference;
-        private ClientResponseModel(PoleReference reference) => _reference = reference;
+        private ClientOutputModel(PoleReference reference) => _reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static ClientResponseModel Deserialize(PoleHeap heap)
+        public static ClientOutputModel Deserialize(PoleHeap heap)
         {
             var reference = heap.GetAt(0);
             if (reference.ReadTypeId() != ModelSchema.SchemaId) throw new InvalidCastException();
             return new(reference);
         }
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static ClientResponseModel Deserialize(Stream stream)
+        public static ClientOutputModel Deserialize(Stream stream)
         {
             var heap = PoleHeap.ReadFrom(stream);
             return Deserialize(heap);

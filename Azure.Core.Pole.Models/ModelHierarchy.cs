@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Azure.Core.Pole.TestModels
 {
-    public struct ModelHierarchy : IObject // TODO: how can we remove this?
+    public struct ParentModel : IObject // TODO: how can we remove this?
     {
         const int FooOffset = 0;                        // int
         const int BarOffset = FooOffset + sizeof(int);  // bool
@@ -15,10 +15,10 @@ namespace Azure.Core.Pole.TestModels
         readonly PoleReference _reference;
 
         PoleReference IObject.Reference => _reference; 
-        private ModelHierarchy(PoleReference reference) => _reference = reference;
+        private ParentModel(PoleReference reference) => _reference = reference;
 
-        public static ModelHierarchy Allocate(PoleHeap heap) => new (heap.Allocate(ModelHierarchy.Size));
-        public static ModelHierarchy Deserialize(PoleHeap heap) => new (heap.GetAt(0));
+        public static ParentModel Allocate(PoleHeap heap) => new (heap.Allocate(ParentModel.Size));
+        public static ParentModel Deserialize(PoleHeap heap) => new (heap.GetAt(0));
 
         public int Foo
         {

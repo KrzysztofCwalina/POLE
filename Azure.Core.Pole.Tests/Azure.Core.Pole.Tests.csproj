@@ -19,6 +19,8 @@
     <ProjectReference Include="..\Azure.Core.Pole.Tooling\Azure.Core.Pole.Tooling.csproj" />
     <ProjectReference Include="..\Azure.Core.Pole\Azure.Core.Pole.csproj" />
     <ProjectReference Include="..\Azure.Core.Tests.ModelDefinitions\Azure.Core.Tests.ModelDefinitions.csproj" />
+    <ProjectReference Include="..\CookingReceipesClient\CookingReceipesClient.csproj" />
+    <ProjectReference Include="..\CookingReceipesDefinitions\CookingReceipesDefinitions.csproj" />
   </ItemGroup>
 
 </Project>
