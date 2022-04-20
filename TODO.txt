@@ -1,4 +1,5 @@
 Pri 0
+- cleanup models based on client/server sample
 - object array
 - alow for composing objects, i.e. object inline in anothere object
 - allow arrays be inline in objects

@@ -14,8 +14,7 @@ namespace Azure.Cooking.Receipes
             request.Method = RequestMethod.Get;
             request.Uri.Reset(new Uri("https://localhost:7043/receipes/1"));
             Response response = _pipeline.SendRequest(request, CancellationToken.None);
-            var heap = ArrayPoolHeap.ReadFrom(response.ContentStream);
-            CookingReceipe receipe = CookingReceipe.Deserialize(heap);
+            CookingReceipe receipe = new CookingReceipe(response.Content);
             return receipe;
         }
     }
@@ -31,31 +30,20 @@ namespace Azure.Cooking.Receipes
             public const int Size = 20;
         }
 
-        private readonly PoleReference _reference;
-        internal CookingReceipe(PoleReference reference)
-        {
+        private readonly ReadOnlyPoleReference _reference;
+
+        internal CookingReceipe(BinaryData poleData) {
+            var heap = new SingleSegmentPoleMemory(poleData);
+            var reference = heap.GetRoot();
+            var typeId = reference.ReadTypeId();
+            if (typeId != Schema.SchemaId) throw new InvalidCastException("invalid cast");
             _reference = reference;
         }
 
-        internal static CookingReceipe Deserialize(ArrayPoolHeap heap)
-        {
-            var reference = heap.GetRoot();
-            var typeId = reference.ReadTypeId();
-            if (typeId != Schema.SchemaId) throw new InvalidCastException();
-            return new(reference);
-        }
+        public string Title => _reference.ReadString(Schema.TitleOffset);
 
-        public string Title
-        {
-            get => _reference.ReadString(Schema.TitleOffset);
-        }
-        public string Ingredients
-        {
-            get => _reference.ReadString(Schema.IngredientsOffset);
-        }
-        public string Directions
-        {
-            get => _reference.ReadString(Schema.DirectionsOffset);
-        }
+        public string Ingredients => _reference.ReadString(Schema.IngredientsOffset);
+
+        public string Directions => _reference.ReadString(Schema.DirectionsOffset);
     }
 }
