@@ -8,6 +8,15 @@ namespace Azure.Core.Pole
         readonly int _address;
         readonly ReadOnlyMemory<byte> _memory;
 
+        public ReadOnlyPoleReference(BinaryData poleData, ulong schemaId)
+        {
+            _memory = poleData.ToMemory();
+            _address = PoleHeap.RootOffset;
+
+            var typeId = this.ReadTypeId();
+            if ((typeId & 0xFFFFFFFFFFFFFF00) != schemaId) throw new InvalidCastException("invalid cast");
+        }
+
         public ReadOnlyPoleReference(ReadOnlyMemory<byte> memory, int address)
         {
             _memory = memory;

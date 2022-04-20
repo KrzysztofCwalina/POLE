@@ -13,7 +13,11 @@ namespace Azure.Cooking.Receipes
             var request = _pipeline.CreateRequest();
             request.Method = RequestMethod.Get;
             request.Uri.Reset(new Uri("https://localhost:7043/receipes/1"));
+
             Response response = _pipeline.SendRequest(request, CancellationToken.None);
+
+            if (response.IsError) throw new RequestFailedException(response);
+
             CookingReceipe receipe = new CookingReceipe(response.Content);
             return receipe;
         }
@@ -32,13 +36,8 @@ namespace Azure.Cooking.Receipes
 
         private readonly ReadOnlyPoleReference _reference;
 
-        internal CookingReceipe(BinaryData poleData) {
-            ReadOnlyMemory<byte> memory = poleData.ToMemory();
-            var reference = new ReadOnlyPoleReference(memory, PoleHeap.RootOffset);
-            var typeId = reference.ReadTypeId();
-            if (typeId != Schema.SchemaId) throw new InvalidCastException("invalid cast");
-            _reference = reference;
-        }
+        internal CookingReceipe(BinaryData poleData) 
+            => _reference = new ReadOnlyPoleReference(poleData, Schema.SchemaId);
 
         public string Title => _reference.ReadString(Schema.TitleOffset);
 
