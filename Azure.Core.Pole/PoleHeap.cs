@@ -149,8 +149,8 @@ namespace Azure.Core.Pole
             var span = writer.GetSpan(_free + 4);
             BinaryPrimitives.WriteInt32LittleEndian(span, _free);
             _memory.Span.Slice(0, _free).CopyTo(span.Slice(4));
-            writer.Advance(_free);
-            return _free;
+            writer.Advance(_free + 4);
+            return _free + 4;
         }
     }
 }
