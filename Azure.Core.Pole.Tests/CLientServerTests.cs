@@ -34,7 +34,7 @@ namespace Azure.Core.Pole.Tests
 
         private Stream MockedGet(ushort apiVersions)
         {
-            var heap = new PoleHeap();
+            var heap = new ArrayPoolHeap();
             var model = ServerModel.Allocate(heap, apiVersions);
             model.Number = 5;
             if (apiVersions > 1)
@@ -79,9 +79,9 @@ namespace Azure.Core.Pole.Tests
         private ClientModel(PoleReference reference) => _reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        internal static ClientModel Deserialize(PoleHeap heap)
+        internal static ClientModel Deserialize(ArrayPoolHeap heap)
         {
-            var reference = heap.GetAt(0);
+            var reference = heap.GetRoot();
             var type = reference.ReadTypeId();
             if (type != ClientServerSchema.V1 && type != ClientServerSchema.V2) throw new InvalidCastException();
             return new(reference);
@@ -89,7 +89,7 @@ namespace Azure.Core.Pole.Tests
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static ClientModel Deserialize(Stream stream)
         {
-            var heap = PoleHeap.ReadFrom(stream);
+            var heap = ArrayPoolHeap.ReadFrom(stream);
             return Deserialize(heap);
         }
         public int Number => _reference.ReadInt32(ClientServerSchema.NumberOffset);
@@ -109,7 +109,7 @@ namespace Azure.Core.Pole.Tests
 
         private ServerModel(PoleReference reference) => _reference = reference;
 
-        public static ServerModel Allocate(PoleHeap heap, ushort version)
+        public static ServerModel Allocate(ArrayPoolHeap heap, ushort version)
         {
             int size = ClientServerSchema.GetSize(version);
             PoleReference reference = heap.Allocate(size);

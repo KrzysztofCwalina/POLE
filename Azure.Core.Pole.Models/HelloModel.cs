@@ -21,16 +21,16 @@ namespace Azure.Core.Pole.TestModels
         private HelloModel(PoleReference reference) => _reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static HelloModel Deserialize(PoleHeap heap)
+        public static HelloModel Deserialize(ArrayPoolHeap heap)
         {
-            var reference = heap.GetAt(0);
+            var reference = heap.GetRoot();
             if (reference.ReadTypeId() != HelloModelSchema.SchemaId) throw new InvalidCastException();
             return new (reference);
         } 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static HelloModel Deserialize(Stream stream)
         {
-            var heap = PoleHeap.ReadFrom(stream);
+            var heap = ArrayPoolHeap.ReadFrom(stream);
             return Deserialize(heap);
         }
 
@@ -49,7 +49,7 @@ namespace Azure.Core.Pole.TestModels.Server
         private readonly PoleReference _reference;
         private HelloModel(PoleReference reference) => _reference = reference;
 
-        public static HelloModel Allocate(PoleHeap heap)
+        public static HelloModel Allocate(ArrayPoolHeap heap)
         {
             PoleReference reference = heap.Allocate(HelloModelSchema.Size);
             reference.WriteTypeId(HelloModelSchema.SchemaId);

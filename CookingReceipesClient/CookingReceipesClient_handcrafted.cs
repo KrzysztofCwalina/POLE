@@ -1,6 +1,5 @@
 using Azure;
 using Azure.Core;
-using Azure.Core.Pipeline;
 using Azure.Core.Pole;
 using System;
 using System.Threading;
@@ -15,7 +14,7 @@ namespace Azure.Cooking.Receipes
             request.Method = RequestMethod.Get;
             request.Uri.Reset(new Uri("https://localhost:7043/receipes/1"));
             Response response = _pipeline.SendRequest(request, CancellationToken.None);
-            var heap = PoleHeap.ReadFrom(response.ContentStream);
+            var heap = ArrayPoolHeap.ReadFrom(response.ContentStream);
             CookingReceipe receipe = CookingReceipe.Deserialize(heap);
             return receipe;
         }
@@ -38,9 +37,9 @@ namespace Azure.Cooking.Receipes
             _reference = reference;
         }
 
-        internal static CookingReceipe Deserialize(PoleHeap heap)
+        internal static CookingReceipe Deserialize(ArrayPoolHeap heap)
         {
-            var reference = heap.GetAt(0);
+            var reference = heap.GetRoot();
             var typeId = reference.ReadTypeId();
             if (typeId != Schema.SchemaId) throw new InvalidCastException();
             return new(reference);

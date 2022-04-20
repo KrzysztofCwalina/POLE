@@ -13,7 +13,7 @@ namespace Azure.Core.Pole.Tests
             var stream = new MemoryStream();
 
             {
-                using PoleHeap heap = new PoleHeap();
+                using ArrayPoolHeap heap = new ArrayPoolHeap();
 
                 var model = TestModels.Server.ModelWithArray.Allocate(heap);
                 var integers = PoleArray<int>.Allocate(heap, 2);
@@ -33,7 +33,7 @@ namespace Azure.Core.Pole.Tests
 
             {
                 stream.Position = 0;
-                using var heap = PoleHeap.ReadFrom(stream);
+                using var heap = ArrayPoolHeap.ReadFrom(stream);
                 ModelWithArray model = ModelWithArray.Deserialize(heap);
                 Assert.AreEqual(5, model.Integers[0]);
                 Assert.AreEqual(20, model.Integers[1]);
@@ -46,7 +46,7 @@ namespace Azure.Core.Pole.Tests
         {
             var stream = new MemoryStream();
             {
-                using PoleHeap heap = new();
+                using ArrayPoolHeap heap = new();
                 var utf8 = PoleArray<Utf8>.Allocate(heap, 2);
                 utf8[0] = Utf8.Allocate(heap, "ABC");
                 utf8[1] = Utf8.Allocate(heap, "DEF");
@@ -55,8 +55,8 @@ namespace Azure.Core.Pole.Tests
                 stream.Position = 0;
             }
             {
-                using PoleHeap heap = PoleHeap.ReadFrom(stream);
-                var strings = new PoleArray<string>(heap.GetAt(0));
+                using ArrayPoolHeap heap = ArrayPoolHeap.ReadFrom(stream);
+                var strings = new PoleArray<string>(heap.GetRoot());
                 var s1 = strings[0];
                 var s2 = strings[1];
                 Assert.AreEqual("ABC", s1);
@@ -69,23 +69,23 @@ namespace Azure.Core.Pole.Tests
         {
             var stream = new MemoryStream();
             {
-                using PoleHeap heap = new();
-                var utf8 = PoleArray<ServerStructModel>.Allocate(heap, 2);
-                utf8[0].Set(1, 2);
-                utf8[1].Set(3, 4);
+                using ArrayPoolHeap heap = new();
+                var array = PoleArray<ServerStructModel>.Allocate(heap, 2);
+                array[0].Set(1, 2);
+                array[1].Set(3, 4);
 
                 heap.WriteTo(stream);
                 stream.Position = 0;
             }
             {
-                using PoleHeap heap = PoleHeap.ReadFrom(stream);
-                var strings = new PoleArray<ServerStructModel>(heap.GetAt(0));
-                var s1 = strings[0];
-                var s2 = strings[1];
-                Assert.AreEqual(1, s1.A);
-                Assert.AreEqual(2, s1.B);
-                Assert.AreEqual(3, s2.A);
-                Assert.AreEqual(4, s2.B);
+                using ArrayPoolHeap heap = ArrayPoolHeap.ReadFrom(stream);
+                var array = new PoleArray<ServerStructModel>(heap.GetRoot());
+                var item1 = array[0];
+                var item2 = array[1];
+                Assert.AreEqual(1, item1.A);
+                Assert.AreEqual(2, item1.B);
+                Assert.AreEqual(3, item2.A);
+                Assert.AreEqual(4, item2.B);
             }
         }
 

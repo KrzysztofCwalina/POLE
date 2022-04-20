@@ -67,6 +67,7 @@ namespace Azure.Core.Pole.Tooling
             writer.WriteLine($"public {type.Name}({type.Name}Options options = default)");
             writer.WriteLine("{");
             writer.Indent++;
+            writer.WriteLine($"if (options == null) options = new {type.Name}Options();");
             writer.WriteLine("_pipeline = HttpPipelineBuilder.Build(options);");
             writer.Indent--;
             writer.WriteLine("}");

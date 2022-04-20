@@ -20,7 +20,7 @@ namespace Azure.Core.Pole
         }
         public PoleReference Reference => _reference;
 
-        public static PoleArray<T> Allocate(PoleHeap heap, int length)
+        public static PoleArray<T> Allocate(ArrayPoolHeap heap, int length)
         {
             if (!PoleType.TryGetSize(typeof(T), out int size))
             {
@@ -75,12 +75,12 @@ namespace Azure.Core.Pole
                 else if (typeof(IObject).IsAssignableFrom(typeof(T)))
                 {
                     int itemAddress = _reference.ReadInt32(itemOffset);
-                    var reference = new PoleReference(_reference.Heap, itemAddress);
-                    return (T)_reference.Heap.Deserialize(reference, typeof(T)); // TODO: can reflection be eliminated?
+                    var reference = new PoleReference(_reference.Heap, _reference.Address + itemAddress);
+                    return (T)reference.Deserialize(typeof(T));
                 }
                 else
                 {
-                    return PoleType.Deserialize<T>(new PoleReference(_reference.Heap, itemOffset));
+                    return PoleType.Deserialize<T>(new PoleReference(_reference.Heap, _reference.Address + itemOffset));
                 }
             }
         }

@@ -17,8 +17,8 @@ namespace Azure.Core.Pole.TestModels
         PoleReference IObject.Reference => _reference; 
         private ParentModel(PoleReference reference) => _reference = reference;
 
-        public static ParentModel Allocate(PoleHeap heap) => new (heap.Allocate(ParentModel.Size));
-        public static ParentModel Deserialize(PoleHeap heap) => new (heap.GetAt(0));
+        public static ParentModel Allocate(ArrayPoolHeap heap) => new (heap.Allocate(ParentModel.Size));
+        public static ParentModel Deserialize(ArrayPoolHeap heap) => new (heap.GetRoot());
 
         public int Foo
         {
@@ -54,7 +54,7 @@ namespace Azure.Core.Pole.TestModels
         PoleReference IObject.Reference => _reference;
         internal ChildModel(PoleReference reference) => _reference = reference;
 
-        public static ChildModel Allocate(PoleHeap heap) => new(heap.Allocate(ChildModel.Size));
+        public static ChildModel Allocate(ArrayPoolHeap heap) => new(heap.Allocate(ChildModel.Size));
 
         public bool Bat
         {

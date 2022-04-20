@@ -24,16 +24,16 @@ namespace Azure.Core.Pole.TestModels
         private ModelWithArray(PoleReference reference) => _reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static ModelWithArray Deserialize(PoleHeap heap)
+        public static ModelWithArray Deserialize(ArrayPoolHeap heap)
         {
-            var reference = heap.GetAt(0);
+            var reference = heap.GetRoot();
             if (reference.ReadTypeId() != ModelWithCollectionSchema.SchemaId) throw new InvalidCastException();
             return new (reference);
         } 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static ModelWithArray Deserialize(Stream stream)
         {
-            var heap = PoleHeap.ReadFrom(stream);
+            var heap = ArrayPoolHeap.ReadFrom(stream);
             return Deserialize(heap);
         }
 
@@ -74,7 +74,7 @@ namespace Azure.Core.Pole.TestModels.Server
             _strings = null;
         } 
 
-        public static ModelWithArray Allocate(PoleHeap heap)
+        public static ModelWithArray Allocate(ArrayPoolHeap heap)
         {
             PoleReference reference = heap.Allocate(ModelWithCollectionSchema.Size);
             reference.WriteTypeId(ModelWithCollectionSchema.SchemaId);

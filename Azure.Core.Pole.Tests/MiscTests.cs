@@ -10,7 +10,7 @@ namespace Azure.Core.Pole.Tests
         [Test]
         public void SchemaVerification()
         {
-            using PoleHeap heap = new PoleHeap();
+            using ArrayPoolHeap heap = new ArrayPoolHeap();
             Assert.Throws<InvalidCastException>(() => {
                 HelloModel hello = HelloModel.Deserialize(heap);
             });

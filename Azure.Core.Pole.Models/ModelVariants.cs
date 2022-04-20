@@ -23,7 +23,7 @@ namespace Azure.Core.Pole.TestModels
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void Serialize(Stream stream)
         {
-            var heap = new PoleHeap(); // TODO: this should write to stack spans, then to stream
+            var heap = new ArrayPoolHeap(); // TODO: this should write to stack spans, then to stream
             var reference = heap.Allocate(ModelSchema.Size);
             reference.WriteTypeId(ModelSchema.SchemaId);
             reference.WriteInt32(ModelSchema.RepeatCountOffset, RepeatCount);
@@ -45,16 +45,16 @@ namespace Azure.Core.Pole.TestModels
         private ClientOutputModel(PoleReference reference) => _reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static ClientOutputModel Deserialize(PoleHeap heap)
+        public static ClientOutputModel Deserialize(ArrayPoolHeap heap)
         {
-            var reference = heap.GetAt(0);
+            var reference = heap.GetRoot();
             if (reference.ReadTypeId() != ModelSchema.SchemaId) throw new InvalidCastException();
             return new(reference);
         }
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static ClientOutputModel Deserialize(Stream stream)
         {
-            var heap = PoleHeap.ReadFrom(stream);
+            var heap = ArrayPoolHeap.ReadFrom(stream);
             return Deserialize(heap);
         }
         public int RepeatCount => _reference.ReadInt32(ModelSchema.RepeatCountOffset);
@@ -73,23 +73,23 @@ namespace Azure.Core.Pole.TestModels
         private ClientRountripingModel(PoleReference reference) => __reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static ClientRountripingModel Deserialize(PoleHeap heap)
+        public static ClientRountripingModel Deserialize(ArrayPoolHeap heap)
         {
-            var reference = heap.GetAt(0);
+            var reference = heap.GetRoot();
             if (reference.ReadTypeId() != ModelSchema.SchemaId) throw new InvalidCastException();
             return new(reference);
         }
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static ClientRountripingModel Deserialize(Stream stream)
         {
-            var heap = PoleHeap.ReadFrom(stream);
+            var heap = ArrayPoolHeap.ReadFrom(stream);
             return Deserialize(heap);
         }
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public void Serialize(Stream stream)
         {
-            var heap = new PoleHeap(); // TODO: this should write directly to pipe, not to in memory buffers
+            var heap = new ArrayPoolHeap(); // TODO: this should write directly to pipe, not to in memory buffers
             var reference = heap.Allocate(ModelSchema.Size);
             reference.WriteTypeId(ModelSchema.SchemaId);
             reference.WriteInt32(ModelSchema.RepeatCountOffset, RepeatCount);
@@ -135,15 +135,15 @@ namespace Azure.Core.Pole.TestModels
         private readonly PoleReference _reference;
         private ServerRequestModel(PoleReference reference) => _reference = reference;
 
-        public static ServerRequestModel Deserialize(PoleHeap heap)
+        public static ServerRequestModel Deserialize(ArrayPoolHeap heap)
         {
-            var reference = heap.GetAt(0);
+            var reference = heap.GetRoot();
             if (reference.ReadTypeId() != ModelSchema.SchemaId) throw new InvalidCastException();
             return new(reference);
         }
         public static ServerRequestModel Deserialize(Stream stream)
         {
-            var heap = PoleHeap.ReadFrom(stream);
+            var heap = ArrayPoolHeap.ReadFrom(stream);
             return Deserialize(heap);
         }
 
@@ -160,7 +160,7 @@ namespace Azure.Core.Pole.TestModels
         private readonly PoleReference _reference;
         private ServerResponseModel(PoleReference reference) => _reference = reference;
 
-        public static ServerResponseModel Allocate(PoleHeap heap)
+        public static ServerResponseModel Allocate(ArrayPoolHeap heap)
         {
             PoleReference reference = heap.Allocate(ModelSchema.Size);
             reference.WriteTypeId(ModelSchema.SchemaId);

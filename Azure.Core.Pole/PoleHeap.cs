@@ -11,35 +11,99 @@ using System.Threading.Tasks;
 
 namespace Azure.Core.Pole
 {
-    public class PoleHeap : IDisposable
+    public abstract class PoleHeap
     {
-        Memory<byte> _memory;
-        int _free = 0;
+        public abstract PoleReference Allocate(int size);
+        public abstract Span<byte> GetBytes(int address, int length = -1);
+        public abstract byte this[int address] { get; set; } // TODO: this is not efficient
+
+        //public PoleReference GetReference(int address) => new PoleReference(this, address);
+        public PoleReference GetRoot() => new PoleReference(this, HeaderSize);
+
+        protected const int HeaderSize = 4;
+    }
+    public class PipelineHeap : PoleHeap
+    {
+        PipeWriter _writer;
+        int _written;
+        Memory<byte> _buffer;
+
+        public PipelineHeap(PipeWriter writer)
+        {
+            _writer = writer;
+            _buffer = _writer.GetMemory();
+            _written = HeaderSize;
+        }
+
+        public override PoleReference Allocate(int size)
+        {
+            var reference = new PoleReference(this, _written);
+            _buffer.Slice(_written, size).Span.Fill(0);
+            _written += size;
+            return reference;
+        }
+
+        public override Span<byte> GetBytes(int address, int length = -1)
+            => _buffer.Span.Slice(address, length == -1 ? _buffer.Length - address : length);
+        
+        public int TotalWritten => _written;
+
+        public override byte this[int address]
+        {
+            get => _buffer.Span[address];
+            set => _buffer.Span[address] = value;
+        }
+
+        public void Complete()
+        {
+            BinaryPrimitives.WriteInt32LittleEndian(_buffer.Span, _written);
+            _writer.Advance(_written);
+            _writer.Complete();
+        }
+    }
+    public class ArrayPoolHeap : PoleHeap, IDisposable
+    {
+        Memory<byte> _buffer;
+        int _written = 0;
         int _segmentSize;
 
-        public PoleHeap(int segmentSize = 512)
+        public ArrayPoolHeap(int segmentSize = 512)
         {
             _segmentSize = segmentSize;
-            var bytes = ArrayPool<byte>.Shared.Rent(segmentSize);
+            var bytes = ArrayPool<byte>.Shared.Rent(_segmentSize);
             Array.Clear(bytes, 0, bytes.Length);
-            _memory = bytes;
+            _buffer = bytes;
+            _written = HeaderSize;
+        }
+        
+        public override PoleReference Allocate(int size)
+        {
+            var address = _written;
+            _written += size;
+            return new PoleReference(this, address);
         }
 
-        public static async Task<PoleHeap> CreateAsync(Stream stream, int segmentSize = 512, CancellationToken cancellationToken = default)
+        public override Span<byte> GetBytes(int address, int length = -1)
+            => _buffer.Span.Slice(address, length == -1 ? _buffer.Length - address : length);
+
+        public override byte this[int address]
         {
-            var memory = ArrayPool<byte>.Shared.Rent(segmentSize);
-            int read = await stream.ReadAsync(memory, 0, memory.Length);
-            var len = BinaryPrimitives.ReadInt32LittleEndian(memory);
-            var heap = new PoleHeap()
-            {
-                _memory = memory,
-                _free = len,
-                _segmentSize = segmentSize
-            };
-            return heap;
+            get => _buffer.Span[address];
+            set => _buffer.Span[address] = value;
         }
-        public static PoleHeap ReadFrom(Stream stream, int segmentSize = 512)
+        
+        public void Dispose()
         {
+            ReadOnlyMemory<byte> memory = _buffer;
+            _buffer = null;
+            if (MemoryMarshal.TryGetArray(memory, out var segment)){
+                ArrayPool<byte>.Shared.Return(segment.Array);
+            }
+        }
+
+        public static ArrayPoolHeap ReadFrom(Stream stream, int segmentSize = 512)
+        {
+            // read header
             var lenMemory = ArrayPool<byte>.Shared.Rent(4);
             int lenRead = stream.Read(lenMemory, 0, 4);
             if (lenRead != 4) throw new NotImplementedException();
@@ -47,110 +111,59 @@ namespace Azure.Core.Pole
             ArrayPool<byte>.Shared.Return(lenMemory);
 
             var memory = ArrayPool<byte>.Shared.Rent(segmentSize);
-            int read = stream.Read(memory, 0, memory.Length);
-            var heap = new PoleHeap()
+            BinaryPrimitives.WriteInt32LittleEndian(memory, len);
+            int read = stream.Read(memory, HeaderSize, memory.Length - HeaderSize);
+            var heap = new ArrayPoolHeap()
             {
-                _memory = memory,
-                _free = len,
+                _buffer = memory,
+                _written = len,
                 _segmentSize = segmentSize
             };
             return heap;
         }
-        public static PoleHeap ReadFrom(Memory<byte> data)
-        {
-            if (data.Length < 4) throw new InvalidOperationException("bytes don't contain POLE data");
-            var length = BinaryPrimitives.ReadInt32LittleEndian(data.Span);
+        //public static ArrayPoolHeap ReadFrom(Memory<byte> data)
+        //{
+        //    if (data.Length < 4) throw new InvalidOperationException("bytes don't contain POLE data");
+        //    var length = BinaryPrimitives.ReadInt32LittleEndian(data.Span);
 
-            var heap = new PoleHeap()
-            {
-                _memory = data.Slice(4),
-                _free = length,
-                _segmentSize = data.Length
-            };
-            return heap;
-        }
-        
-        public T Allocate<T>()
-        {
-            var type = typeof(T);
-            var size = type.GetField("__Size", BindingFlags.Static | BindingFlags.NonPublic);
-            if (size == null || size.FieldType != typeof(int)) throw new InvalidOperationException("type does not have a size field");
-            var sizeValue = (int)size.GetValue(null);
-            PoleReference reference = this.Allocate(sizeValue);
-            return Deserialize<T>(reference);
-        }
-        public T Deserialize<T>(PoleReference reference)
-        {
-            var ctor = typeof(T).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new Type[] { typeof(PoleReference) }, Array.Empty<ParameterModifier>());
-            var value = (T)ctor.Invoke(new object[] { reference });
-            return value;
-        }
-        public object Deserialize(PoleReference reference, Type type)
-        {
-            var ctor = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new Type[] { typeof(PoleReference) }, Array.Empty<ParameterModifier>());
-            var value = ctor.Invoke(new object[] { reference });
-            return value;
-        }
-        public T Deserialize<T>(int atAddress = 0)
-        {
-            var reference = GetAt(atAddress);
-            return Deserialize<T>(reference);
-        }
+        //    var heap = new ArrayPoolHeap()
+        //    {
+        //        _buffer = data.Slice(4),
+        //        _written = length,
+        //        _segmentSize = data.Length
+        //    };
+        //    return heap;
+        //}
+        //public async Task WriteToAsync(Stream stream, CancellationToken cancellationToken = default)
+        //{
+        //    // TODO: this needs to be async
+        //    stream.WriteByte((byte)_written);
+        //    stream.WriteByte((byte)(_written >> 8));
+        //    stream.WriteByte((byte)(_written >> 16));
+        //    stream.WriteByte((byte)(_written >> 24));
+        //    stream.Flush(); 
+        //    await stream.WriteAsync(_buffer.Slice(0, _written), cancellationToken);
+        //    await stream.FlushAsync(cancellationToken);
+        //}
 
-        public PoleReference Allocate(int size)
-        {
-            var address = _free;
-            _free += size;
-            return new PoleReference(this, address);
-        }
-        public PoleReference GetAt(int offset) => new PoleReference(this, offset);
-        
-        public Span<byte> GetBytes(int address, int length = -1)
-            => _memory.Span.Slice(address, length == -1 ? _memory.Length - address : length);
-
-        public void Dispose()
-        {
-            ReadOnlyMemory<byte> memory = _memory;
-            _memory = null;
-            if (MemoryMarshal.TryGetArray(memory, out var segment)){
-                ArrayPool<byte>.Shared.Return(segment.Array);
-            }
-        }
-
-        public byte this[int address]
-        {
-            get => _memory.Span[address];
-            set => _memory.Span[address] = value;
-        }
-
-        public async Task WriteToAsync(Stream stream, CancellationToken cancellationToken = default)
-        {
-            // TODO: this needs to be async
-            stream.WriteByte((byte)_free);
-            stream.WriteByte((byte)(_free >> 8));
-            stream.WriteByte((byte)(_free >> 16));
-            stream.WriteByte((byte)(_free >> 24));
-            stream.Flush(); 
-            await stream.WriteAsync(_memory.Slice(0, _free), cancellationToken);
-            await stream.FlushAsync(cancellationToken);
-        }
+        //public static async Task<ArrayPoolHeap> ReadFromAsync(Stream stream, int segmentSize = 512, CancellationToken cancellationToken = default)
+        //{
+        //    var memory = ArrayPool<byte>.Shared.Rent(segmentSize);
+        //    int read = await stream.ReadAsync(memory, 0, memory.Length);
+        //    var len = BinaryPrimitives.ReadInt32LittleEndian(memory);
+        //    var heap = new ArrayPoolHeap()
+        //    {
+        //        _buffer = memory,
+        //        _written = len,
+        //        _segmentSize = segmentSize
+        //    };
+        //    return heap;
+        //}
         public void WriteTo(Stream stream, CancellationToken cancellationToken = default)
         {
-            stream.WriteByte((byte)_free);
-            stream.WriteByte((byte)(_free >> 8));
-            stream.WriteByte((byte)(_free >> 16));
-            stream.WriteByte((byte)(_free >> 24));
-            stream.Write(_memory.Slice(0, _free), cancellationToken);
+            BinaryPrimitives.WriteInt32LittleEndian(_buffer.Span, _written);
+            stream.Write(_buffer.Slice(0, _written), cancellationToken);
             stream.Flush();
-        }
-
-        public long WriteTo(PipeWriter writer)
-        {
-            var span = writer.GetSpan(_free + 4);
-            BinaryPrimitives.WriteInt32LittleEndian(span, _free);
-            _memory.Span.Slice(0, _free).CopyTo(span.Slice(4));
-            writer.Advance(_free + 4);
-            return _free + 4;
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Azure.Core.Pole.Tests
         {
             var stream = new MemoryStream();
             {
-                using PoleHeap heap = new PoleHeap();
+                using ArrayPoolHeap heap = new ArrayPoolHeap();
 
                 ParentModel parent = ParentModel.Allocate(heap);
                 ChildModel child = ChildModel.Allocate(heap);
@@ -28,7 +28,7 @@ namespace Azure.Core.Pole.Tests
             }
             {
                 stream.Position = 0;
-                using var heap = PoleHeap.ReadFrom(stream);
+                using var heap = ArrayPoolHeap.ReadFrom(stream);
 
                 ParentModel deserializedParent = ParentModel.Deserialize(heap);
                 Assert.AreEqual(32, deserializedParent.Foo);

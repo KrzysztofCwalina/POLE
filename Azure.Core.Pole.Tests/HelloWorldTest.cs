@@ -24,7 +24,7 @@ namespace Azure.Core.Pole.Tests
 
             // write to stream (something a server would do when it responds to a client request)
             {
-                using PoleHeap heap = new PoleHeap(); // the heap rents buffers from a pool
+                using ArrayPoolHeap heap = new ArrayPoolHeap(); // the heap rents buffers from a pool
                 var hello = TestModels.Server.HelloModel.Allocate(heap);
 
                 hello.Message = "Hello World!"; // this does not actually allocate anthing on the GC heap.

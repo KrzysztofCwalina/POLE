@@ -23,7 +23,7 @@ namespace Azure.Core.Pole.Tests
 
             // server
             {
-                using PoleHeap heap = new PoleHeap();
+                using ArrayPoolHeap heap = new ArrayPoolHeap();
                 ServerResponseModel model = ServerResponseModel.Allocate(heap);
 
                 model.Message = Utf8.Allocate(heap, "Hello");
@@ -36,7 +36,7 @@ namespace Azure.Core.Pole.Tests
             // client
             {
                 stream.Position = 0;
-                using var heap = PoleHeap.ReadFrom(stream);
+                using var heap = ArrayPoolHeap.ReadFrom(stream);
                 
                 // TODO: add overload to read directly from stream? But who then returns buffers to pool?
                 ClientRountripingModel hello = ClientRountripingModel.Deserialize(heap);
@@ -50,7 +50,7 @@ namespace Azure.Core.Pole.Tests
             // server again
             {
                 stream.Position = 0;
-                using var heap = PoleHeap.ReadFrom(stream);
+                using var heap = ArrayPoolHeap.ReadFrom(stream);
                 ServerRequestModel hello = ServerRequestModel.Deserialize(heap);
 
                 Assert.AreEqual("Hi!", hello.Message.ToString());

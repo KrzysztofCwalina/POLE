@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers.Binary;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -63,6 +64,20 @@ namespace Azure.Core.Pole
         {
             var len = BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset));
             return _heap.GetBytes(_address + sizeof(int), len);
+        }
+
+        // TODO: can reflection be eliminated?
+        public T Deserialize<T>()
+        {
+            var ctor = typeof(T).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new Type[] { typeof(PoleReference) }, Array.Empty<ParameterModifier>());
+            var value = (T)ctor.Invoke(new object[] { this });
+            return value;
+        }
+        public object Deserialize(Type type)
+        {
+            var ctor = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new Type[] { typeof(PoleReference) }, Array.Empty<ParameterModifier>());
+            var value = ctor.Invoke(new object[] { this });
+            return value;
         }
     }
 }

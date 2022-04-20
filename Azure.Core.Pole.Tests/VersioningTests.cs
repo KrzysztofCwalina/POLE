@@ -12,7 +12,7 @@ namespace Azure.Core.Pole.Tests
         {
             // V1 model parses V0 payload
             {
-                var heap = new PoleHeap();
+                var heap = new ArrayPoolHeap();
                 var serverModel = ServerVersionedModel.Allocate(heap, 0);
                 serverModel.Number = 5;
 
@@ -31,7 +31,7 @@ namespace Azure.Core.Pole.Tests
         {
             // V0 model parses V1 payload
             {
-                var heap = new PoleHeap();
+                var heap = new ArrayPoolHeap();
                 var serverModel = ServerVersionedModel.Allocate(heap, 1);
                 serverModel.Number = 5;
 
@@ -77,9 +77,9 @@ namespace Azure.Core.Pole.Tests
         private ClientV0Model(PoleReference reference) => _reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static ClientV0Model Deserialize(PoleHeap heap)
+        public static ClientV0Model Deserialize(ArrayPoolHeap heap)
         {
-            var reference = heap.GetAt(0);
+            var reference = heap.GetRoot();
             var type = reference.ReadTypeId();
             if (!ModelSchema.SchemaMatches(type)) throw new InvalidCastException();
             return new(reference);
@@ -87,7 +87,7 @@ namespace Azure.Core.Pole.Tests
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static ClientV0Model Deserialize(Stream stream)
         {
-            var heap = PoleHeap.ReadFrom(stream);
+            var heap = ArrayPoolHeap.ReadFrom(stream);
             return Deserialize(heap);
         }
 
@@ -100,9 +100,9 @@ namespace Azure.Core.Pole.Tests
         private ClientV1Model(PoleReference reference) => _reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public static ClientV1Model Deserialize(PoleHeap heap)
+        public static ClientV1Model Deserialize(ArrayPoolHeap heap)
         {
-            var reference = heap.GetAt(0);
+            var reference = heap.GetRoot();
             var type = reference.ReadTypeId();
             if (!ModelSchema.SchemaMatches(type)) throw new InvalidCastException();
             return new(reference);
@@ -110,7 +110,7 @@ namespace Azure.Core.Pole.Tests
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static ClientV1Model Deserialize(Stream stream)
         {
-            var heap = PoleHeap.ReadFrom(stream);
+            var heap = ArrayPoolHeap.ReadFrom(stream);
             return Deserialize(heap);
         }
         public int Number => _reference.ReadInt32(ModelSchema.NumberOffset);
@@ -131,7 +131,7 @@ namespace Azure.Core.Pole.Tests
 
         private ServerVersionedModel(PoleReference reference) => _reference = reference;
 
-        public static ServerVersionedModel Allocate(PoleHeap heap, byte version)
+        public static ServerVersionedModel Allocate(ArrayPoolHeap heap, byte version)
         {
             int size = ModelSchema.GetSize(version);
             PoleReference reference = heap.Allocate(size);

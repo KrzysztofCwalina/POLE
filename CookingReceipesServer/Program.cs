@@ -9,18 +9,17 @@ app.MapGet("/receipes/{id}", (HttpContext context) =>
 {
     context.Response.StatusCode = 200;
     context.Response.ContentType = "application/pole";
+    var writer = context.Response.BodyWriter;
 
-    var heap = new PoleHeap();
-    var receipe = CookingReceipe.Allocate(heap);
+    var pole = new PipelineHeap(writer);
+    var receipe = CookingReceipe.Allocate(pole);
 
     receipe.Title = "Polish Pierogi";
     receipe.Directions = "Mix ingredients, make pierogi, and cook in a pot of hot water.";
     receipe.Ingredients = "Flour, water, salt, potatoes, white cheese, onion.";
 
-    var writer = context.Response.BodyWriter;
-    long contentLength = heap.WriteTo(writer);
-    context.Response.ContentLength = contentLength;
-    writer.Complete();
+    context.Response.ContentLength = pole.TotalWritten;
+    pole.Complete();
 });
 
 app.Run();
