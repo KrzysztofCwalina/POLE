@@ -14,21 +14,16 @@ namespace Azure.Core.Pole
             _address = address;
         }
 
-        public ulong ReadTypeId() => ReadUInt64(0);
-
-        public ulong ReadUInt64(int offset) => BinaryPrimitives.ReadUInt64LittleEndian(_memory.Span.Slice(_address + offset));
+        public ulong ReadTypeId()
+            => BinaryPrimitives.ReadUInt64LittleEndian(_memory.Span.Slice(_address));
 
         public string ReadString(int offset)
         {
-            var bytes = this.ReadByteBuffer(0);
-            return bytes.ToStringAsciiNoAlloc();
-        }
-
-        public ReadOnlySpan<byte> ReadByteBuffer(int offset)
-        {
             var span = _memory.Span;
-            var len = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(_address + offset));
-            return span.Slice(_address + sizeof(int), len);
+            int stringAddress = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(_address + offset));
+            int stringLength = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(stringAddress, sizeof(int)));
+            ReadOnlySpan<byte> stringBytes = span.Slice(stringAddress + sizeof(int), stringLength);
+            return stringBytes.ToStringAsciiNoAlloc();
         }
     }
 }
