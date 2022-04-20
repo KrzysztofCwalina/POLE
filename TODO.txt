@@ -1,4 +1,5 @@
 Pri 0
+- implement client/server performance test
 - cleanup models based on client/server sample
 - object array
 - alow for composing objects, i.e. object inline in anothere object
