@@ -25,7 +25,7 @@ namespace Azure.Cooking.Receipes
     {
         private struct Schema
         {
-            public const ulong SchemaId = 0xFFFFFFFFFFFFFFFF;
+            public const ulong SchemaId = 0xFFFFFFFFFFFFFF00;
             public const int TitleOffset = 8;
             public const int IngredientsOffset = 12;
             public const int DirectionsOffset = 16;

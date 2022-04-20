@@ -10,7 +10,6 @@ namespace Azure.Cooking.Receipes
 
         public CookingReceipesClient(CookingReceipesClientOptions options = default)
         {
-            if (options == null) options = new CookingReceipesClientOptions();
             _pipeline = HttpPipelineBuilder.Build(options);
         }
     }
