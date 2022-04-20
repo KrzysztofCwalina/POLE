@@ -1,25 +1,22 @@
 ﻿using System;
 using System.Buffers.Binary;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Azure.Core.Pole
 {
     public readonly struct ReadOnlyPoleReference
     {
         readonly int _address;
-        readonly PoleMemory _heap;
+        readonly ReadOnlyMemory<byte> _memory;
 
-        public ReadOnlyPoleReference(PoleMemory memory, int address)
+        public ReadOnlyPoleReference(ReadOnlyMemory<byte> memory, int address)
         {
-            _heap = memory;
+            _memory = memory;
             _address = address;
         }
 
         public ulong ReadTypeId() => ReadUInt64(0);
 
-        public ulong ReadUInt64(int offset) => BinaryPrimitives.ReadUInt64LittleEndian(_heap.ReadBytes(_address + offset));
+        public ulong ReadUInt64(int offset) => BinaryPrimitives.ReadUInt64LittleEndian(_memory.Span.Slice(_address + offset));
 
         public string ReadString(int offset)
         {
@@ -29,8 +26,9 @@ namespace Azure.Core.Pole
 
         public ReadOnlySpan<byte> ReadByteBuffer(int offset)
         {
-            var len = BinaryPrimitives.ReadInt32LittleEndian(_heap.ReadBytes(_address + offset));
-            return _heap.ReadBytes(_address + sizeof(int), len);
+            var span = _memory.Span;
+            var len = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(_address + offset));
+            return span.Slice(_address + sizeof(int), len);
         }
     }
 }

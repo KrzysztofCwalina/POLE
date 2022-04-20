@@ -33,8 +33,8 @@ namespace Azure.Cooking.Receipes
         private readonly ReadOnlyPoleReference _reference;
 
         internal CookingReceipe(BinaryData poleData) {
-            var heap = new SingleSegmentPoleMemory(poleData);
-            var reference = heap.GetRoot();
+            ReadOnlyMemory<byte> memory = poleData.ToMemory();
+            var reference = new ReadOnlyPoleReference(memory, PoleHeap.RootOffset);
             var typeId = reference.ReadTypeId();
             if (typeId != Schema.SchemaId) throw new InvalidCastException("invalid cast");
             _reference = reference;

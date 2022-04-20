@@ -23,7 +23,7 @@ namespace Azure.Core.Pole
             var bytes = ArrayPool<byte>.Shared.Rent(_segmentSize);
             Array.Clear(bytes, 0, bytes.Length);
             _buffer = bytes;
-            _written = HeaderSize;
+            _written = RootOffset;
         }
         
         public override PoleReference Allocate(int size)
@@ -36,8 +36,8 @@ namespace Azure.Core.Pole
         public override Span<byte> GetBytes(int address, int length = -1)
             => _buffer.Span.Slice(address, length == -1 ? _buffer.Length - address : length);
 
-        public override ReadOnlySpan<byte> ReadBytes(int address, int length = -1)
-            => GetBytes(address, length);
+        //public override ReadOnlySpan<byte> ReadBytes(int address, int length = -1)
+        //    => GetBytes(address, length);
 
         public override byte this[int address]
         {
@@ -65,7 +65,7 @@ namespace Azure.Core.Pole
 
             var memory = ArrayPool<byte>.Shared.Rent(segmentSize);
             BinaryPrimitives.WriteInt32LittleEndian(memory, len);
-            int read = stream.Read(memory, HeaderSize, memory.Length - HeaderSize);
+            int read = stream.Read(memory, RootOffset, memory.Length - RootOffset);
             var heap = new ArrayPoolHeap()
             {
                 _buffer = memory,
