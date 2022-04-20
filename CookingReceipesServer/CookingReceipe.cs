@@ -2,7 +2,7 @@
 
 namespace CookingReceipesServer
 {
-    public readonly struct CookingReceipe
+    internal readonly struct CookingReceipe
     {
         private struct Schema
         {
@@ -14,13 +14,12 @@ namespace CookingReceipesServer
         }
 
         private readonly PoleReference _reference;
-        private CookingReceipe(PoleReference reference) => _reference = reference;
 
-        public static CookingReceipe Allocate(PoleHeap heap)
+        public CookingReceipe(PoleHeap heap)
         {
             PoleReference reference = heap.Allocate(Schema.Size);
             reference.WriteTypeId(Schema.SchemaId);
-            return new CookingReceipe(reference);
+            _reference = reference;
         }
 
         public ReadOnlySpan<byte> Title
