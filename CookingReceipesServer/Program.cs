@@ -22,4 +22,18 @@ app.MapGet("/receipes/{id}", (HttpContext context) =>
     heap.Complete();
 });
 
+app.MapPost("/receipes/", (HttpContext context) =>
+{
+    context.Response.StatusCode = 200;
+    context.Response.ContentType = "application/pole";
+    var writer = context.Response.BodyWriter;
+
+    int receipeId = 303;
+    var heap = new PipelineHeap(writer);
+    var reference = heap.AllocateObject(12, PoleType.Int32Id);
+    reference.WriteInt32(8, receipeId);
+    context.Response.ContentLength = heap.TotalWritten;
+    heap.Complete();
+});
+
 app.Run();

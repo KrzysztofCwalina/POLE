@@ -2,7 +2,7 @@
 
 namespace Azure.Core.Pole
 {
-    public abstract class PoleHeap 
+    public abstract class PoleHeap : IDisposable
     {
         protected abstract PoleReference AllocateCore(int size);
         public PoleReference AllocateObject(int size, ulong typeId)
@@ -22,6 +22,11 @@ namespace Azure.Core.Pole
         public abstract Span<byte> GetBytes(int address, int length = -1);
         public abstract byte this[int address] { get; set; } // TODO: this is not efficient
         public PoleReference GetRoot() => new(this, RootOffset);
+
+        public abstract bool TryComputeLength(out long length);
+
+        public void Dispose() => Dispose(true);
+        protected virtual void Dispose(bool isDisposing) { }
 
         public const int RootOffset = 4; // TODO: should pole heap be a pole object (a dynamic object)?
     }

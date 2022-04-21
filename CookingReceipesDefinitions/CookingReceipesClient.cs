@@ -21,7 +21,7 @@ namespace Azure.Cooking.Receipes
         public ulong Id { get; }
     }
 
-    public class CookingReceipeSubmission
+    public class _CookingReceipeSubmission
     {
         public string Tile { get; set; }
         public byte[] ImageBytes { get; set; }

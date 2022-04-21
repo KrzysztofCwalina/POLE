@@ -42,5 +42,11 @@ namespace Azure.Core.Pole
             _writer.Advance(_written);
             _writer.Complete();
         }
+
+        public override bool TryComputeLength(out long length)
+        {
+            length = _written;
+            return true;
+        }
     }
 }

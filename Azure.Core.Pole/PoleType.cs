@@ -8,6 +8,7 @@ namespace Azure.Core.Pole
     public static class PoleType
     {
         public const ulong ArrayId = 0x0000000000000100;
+        public const ulong Int32Id = 0x0000000000000200; 
 
         public static bool TryGetSize(Type type, out int size)
         {

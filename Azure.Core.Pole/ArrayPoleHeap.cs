@@ -82,36 +82,28 @@ namespace Azure.Core.Pole
             };
             return heap;
         }
-        //public async Task WriteToAsync(Stream stream, CancellationToken cancellationToken = default)
-        //{
-        //    // TODO: this needs to be async
-        //    stream.WriteByte((byte)_written);
-        //    stream.WriteByte((byte)(_written >> 8));
-        //    stream.WriteByte((byte)(_written >> 16));
-        //    stream.WriteByte((byte)(_written >> 24));
-        //    stream.Flush(); 
-        //    await stream.WriteAsync(_buffer.Slice(0, _written), cancellationToken);
-        //    await stream.FlushAsync(cancellationToken);
-        //}
-
-        //public static async Task<ArrayPoolHeap> ReadFromAsync(Stream stream, int segmentSize = 512, CancellationToken cancellationToken = default)
-        //{
-        //    var memory = ArrayPool<byte>.Shared.Rent(segmentSize);
-        //    int read = await stream.ReadAsync(memory, 0, memory.Length);
-        //    var len = BinaryPrimitives.ReadInt32LittleEndian(memory);
-        //    var heap = new ArrayPoolHeap()
-        //    {
-        //        _buffer = memory,
-        //        _written = len,
-        //        _segmentSize = segmentSize
-        //    };
-        //    return heap;
-        //}
+        public async Task WriteToAsync(Stream stream, CancellationToken cancellationToken = default)
+        {
+            // TODO: this needs to be async
+            stream.WriteByte((byte)_written);
+            stream.WriteByte((byte)(_written >> 8));
+            stream.WriteByte((byte)(_written >> 16));
+            stream.WriteByte((byte)(_written >> 24));
+            stream.Flush();
+            await stream.WriteAsync(_buffer.Slice(0, _written), cancellationToken);
+            await stream.FlushAsync(cancellationToken);
+        }
         public void WriteTo(Stream stream, CancellationToken cancellationToken = default)
         {
             BinaryPrimitives.WriteInt32LittleEndian(_buffer.Span, _written);
             stream.Write(_buffer.Slice(0, _written), cancellationToken);
             stream.Flush();
+        }
+
+        public override bool TryComputeLength(out long length)
+        {
+            length = _written;
+            return true;
         }
     }
 }
