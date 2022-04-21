@@ -19,7 +19,8 @@ namespace Azure.Core.Pole.TestModels
 
         readonly PoleReference _reference;
 
-        PoleReference IObject.Reference => _reference; 
+        int IObject.Address => _reference.Address; 
+
         private ParentModel(PoleReference reference) => _reference = reference;
 
         public static ParentModel Allocate(ArrayPoolHeap heap) => new (heap.AllocateObject(Size, SchemaId));
@@ -57,7 +58,7 @@ namespace Azure.Core.Pole.TestModels
         const int Size = sizeof(byte);
 
         readonly PoleReference _reference;
-        PoleReference IObject.Reference => _reference;
+        int IObject.Address => _reference.Address;
         internal ChildModel(PoleReference reference) => _reference = reference;
 
         public static ChildModel Allocate(ArrayPoolHeap heap) => new(heap.AllocateObject(Size, SchemaId));

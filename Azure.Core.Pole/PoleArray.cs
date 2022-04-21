@@ -52,8 +52,8 @@ namespace Azure.Core.Pole
                 else if (typeof(IObject).IsAssignableFrom(typeof(T)))
                 {
                     IObject iobj = value as IObject;
-                    var reference = iobj.Reference;
-                    _reference.WriteInt32(itemOffset, reference.ObjectAddress);
+                    var address = iobj.Address;
+                    _reference.WriteInt32(itemOffset, address);
                 }
                 else
                 {
@@ -81,12 +81,12 @@ namespace Azure.Core.Pole
                 else if (typeof(IObject).IsAssignableFrom(typeof(T)))
                 {
                     int itemAddress = _reference.ReadInt32(itemOffset);
-                    var reference = new PoleReference(_reference.Heap, _reference.ObjectAddress + itemAddress);
+                    var reference = new PoleReference(_reference.Heap, _reference.Address + itemAddress);
                     return (T)reference.Deserialize(typeof(T));
                 }
                 else
                 {
-                    return PoleType.Deserialize<T>(new PoleReference(_reference.Heap, _reference.ObjectAddress + itemOffset));
+                    return PoleType.Deserialize<T>(new PoleReference(_reference.Heap, _reference.Address + itemOffset));
                 }
             }
         }

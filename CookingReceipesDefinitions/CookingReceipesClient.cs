@@ -8,7 +8,7 @@ namespace Azure.Cooking.Receipes
 {
     public class _CookingReceipesClient
     {
-        public _CookingReceipe GetReceipe(ulong id) => default;
+        public _CookingReceipe GetReceipe(ulong id) => throw default;
 
         //public CookingReceipe[] GetReceipes(CookingReceipeQuery query = default) => default;
         //public ulong AddReceipe(CookingReceipeSubmission receipe) => default;

@@ -1,4 +1,6 @@
 Pri 0
+- implement server request model (model to parse a request from the client)
+- the fact that we have reference being over a heap, and ROReference being over Memory<byte> is a problem. See Utf8 type.
 - implement in-out and out-in models for the client
 - remove all deserialize methods and add ctors that take BinaryData. But what about multi-buffer?
 - make header structured (len, version, etc.)

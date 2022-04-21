@@ -31,7 +31,7 @@ namespace Azure.Cooking.Receipes
             request.Method = RequestMethod.Post;
             request.Uri.Reset(new Uri("https://localhost:7043/receipes"));
             request.Content = new PoleHeapContent(receipe);
-
+            request.Headers.Add(HttpHeader.Names.ContentType, "application/pole");
             Response response = _pipeline.SendRequest(request, CancellationToken.None);
 
             if (response.IsError) throw new RequestFailedException(response);

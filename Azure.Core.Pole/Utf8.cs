@@ -11,10 +11,25 @@ namespace Azure.Core.Pole
     public readonly struct Utf8 : IObject
     {
         readonly PoleReference _reference;
+        readonly ReadOnlyPoleReference _roreference; // TODO: the fact that we have both references is a massive hack
+        readonly bool _isRo;
 
-        PoleReference IObject.Reference => _reference;
+        int IObject.Address => _reference.Address;
 
-        public Utf8(PoleReference reference) => _reference = reference;
+        public Utf8(ReadOnlyPoleReference reference)
+        {
+            _roreference = reference;
+            _reference = default;
+            _isRo = true;
+        }
+
+        public Utf8(PoleReference reference)
+        {
+            _reference = reference;
+            _roreference = default;
+            _isRo = false;
+        } 
+
         public Utf8(PoleHeap heap, string str)
         {
             var strLength = Encoding.UTF8.GetByteCount(str);
@@ -23,13 +38,23 @@ namespace Azure.Core.Pole
             if (!str.TryEncodeToUtf8(buffer, out var written))
             {
                 throw new NotImplementedException("this should never happen");
-            }               
+            }
+            _roreference = default;
+            _isRo = false;
         }
 
         public override string ToString()
         {
-            var bytes = _reference.ReadByteBuffer(0);
-            return bytes.ToStringAsciiNoAlloc();
+            if (!_isRo)
+            {
+                var bytes = _reference.ReadByteBuffer(0);
+                return bytes.ToStringAsciiNoAlloc();
+            }
+            else
+            {
+                var bytes = _roreference.ReadByteBuffer(0);
+                return bytes.ToStringAsciiNoAlloc();
+            }
         }
     }
 }

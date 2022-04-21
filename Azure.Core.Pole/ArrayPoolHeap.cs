@@ -41,16 +41,20 @@ namespace Azure.Core.Pole
             get => _buffer.Span[address];
             set => _buffer.Span[address] = value;
         }
-        
-        public void Dispose()
+
+        protected override void Dispose(bool isDisposing)
         {
-            ReadOnlyMemory<byte> memory = _buffer;
-            _buffer = null;
-            if (MemoryMarshal.TryGetArray(memory, out var segment)){
-                ArrayPool<byte>.Shared.Return(segment.Array);
+            if (isDisposing)
+            {
+                ReadOnlyMemory<byte> memory = _buffer;
+                _buffer = null;
+                if (MemoryMarshal.TryGetArray(memory, out var segment))
+                {
+                    ArrayPool<byte>.Shared.Return(segment.Array);
+                }
             }
         }
-
+ 
         public static ArrayPoolHeap ReadFrom(Stream stream, int segmentSize = 512)
         {
             // read header

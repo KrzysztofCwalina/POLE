@@ -23,6 +23,13 @@ namespace Azure.Core.Pole
             if ((typeId & PoleType.SchemaIdMask) != expectedSchemaId) throw new InvalidCastException("invalid cast");
         }
 
+        public ReadOnlyPoleReference(ReadOnlyMemory<byte> memory, int objectAddress)
+        {
+            _memory = memory;
+            _dataAddress = objectAddress + ObjectDataOffset;
+        }
+
+        public bool IsNull => _dataAddress == ObjectDataOffset; // TODO: it's bad that default(PoleReference) is not null!!!
         internal int ObjectAddress => _dataAddress - ObjectDataOffset;
         internal int DataAddress => _dataAddress;
 
@@ -41,6 +48,20 @@ namespace Azure.Core.Pole
             ReadOnlySpan<byte> stringBytes = span.Slice(stringAddress + ObjectDataOffset + sizeof(int), stringLength);
             return stringBytes.ToStringAsciiNoAlloc();
         }
+
+        public ReadOnlySpan<byte> ReadByteBuffer(int offset)
+        {
+            var span = _memory.Span;
+            var len = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(DataAddress + offset));
+            return span.Slice(DataAddress + sizeof(int), len);
+        }
+
+        public Utf8 ReadUtf8(int offset)
+        {
+            var reference = ReadReference(offset);
+            return new Utf8(reference);
+        }
+        public ReadOnlyPoleReference ReadReference(int offset) => new ReadOnlyPoleReference(_memory, ReadInt32(offset));
 
         public override string ToString()
         {

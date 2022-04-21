@@ -43,4 +43,25 @@ namespace CookingReceipesServer
             set => _reference.WriteInt32(Schema.IdOffset, value);
         }
     }
+
+    internal struct CookingReceipeSubmission
+    {
+        internal struct Schema
+        {
+            public const ulong SchemaId = 0xFFFFFFFFFFFFFD00;
+            public const int TitleOffset = 0;
+            public const int IngredientsOffset = 4;
+            public const int DirectionsOffset = 8;
+            public const int Size = 12;
+        }
+
+        private readonly ReadOnlyPoleReference _reference;
+
+        internal CookingReceipeSubmission(BinaryData poleData)
+            => _reference = new ReadOnlyPoleReference(poleData, Schema.SchemaId);
+
+        public Utf8 Title => _reference.ReadUtf8(Schema.TitleOffset);
+        public Utf8 Ingredients => _reference.ReadUtf8(Schema.IngredientsOffset);
+        public Utf8 Directions => _reference.ReadUtf8(Schema.DirectionsOffset);
+    }
 }
