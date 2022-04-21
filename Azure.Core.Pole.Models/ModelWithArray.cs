@@ -74,11 +74,9 @@ namespace Azure.Core.Pole.TestModels.Server
             _strings = null;
         } 
 
-        public static ModelWithArray Allocate(ArrayPoolHeap heap)
+        public ModelWithArray(PoleHeap heap)
         {
-            PoleReference reference = heap.Allocate(ModelWithCollectionSchema.Size);
-            reference.WriteTypeId(ModelWithCollectionSchema.SchemaId);
-            return new ModelWithArray(reference);
+            _reference = heap.AllocateObject(ModelWithCollectionSchema.Size, ModelWithCollectionSchema.SchemaId);
         }
 
         public PoleArray<int> Integers

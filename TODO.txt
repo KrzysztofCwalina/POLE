@@ -1,4 +1,9 @@
 Pri 0
+- remove all deserialize methods and add ctors that take BinaryData. But what about multi-buffer?
+- make header structured (len, version, etc.)
+- implement input model for client
+- implement in-out and out-in models for the client
+- make sure multi-buffer server code works
 - implement client/server performance test
 - cleanup models based on client/server sample
 - object array

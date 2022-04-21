@@ -12,18 +12,15 @@ namespace Azure.Core.Pole
         PoleReference IObject.Reference => _reference;
 
         public Utf8(PoleReference reference) => _reference = reference;
-        public static Utf8 Allocate(PoleHeap heap, string str)
+        public Utf8(PoleHeap heap, string str)
         {
             var strLength = Encoding.UTF8.GetByteCount(str);
-            var bufferLength = strLength + sizeof(int);
-            var reference = heap.Allocate(bufferLength);
-            Span<byte> buffer = heap.GetBytes(reference.Address, bufferLength);
-            BinaryPrimitives.WriteInt32LittleEndian(buffer, strLength);
-            if (!str.TryEncodeToUtf8(buffer.Slice(sizeof(int)), out var written))
+            _reference = heap.AllocateBuffer(strLength);
+            Span<byte> buffer = heap.GetBytes(_reference.Address + 4, strLength);
+            if (!str.TryEncodeToUtf8(buffer, out var written))
             {
                 throw new NotImplementedException("this should never happen");
             }               
-            return new Utf8(reference);
         }
 
         public override string ToString()

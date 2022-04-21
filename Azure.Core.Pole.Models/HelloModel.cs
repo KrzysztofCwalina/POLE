@@ -49,11 +49,9 @@ namespace Azure.Core.Pole.TestModels.Server
         private readonly PoleReference _reference;
         private HelloModel(PoleReference reference) => _reference = reference;
 
-        public static HelloModel Allocate(ArrayPoolHeap heap)
+        public HelloModel(PoleHeap heap)
         {
-            PoleReference reference = heap.Allocate(HelloModelSchema.Size);
-            reference.WriteTypeId(HelloModelSchema.SchemaId);
-            return new HelloModel(reference);
+            _reference = heap.AllocateObject(HelloModelSchema.Size, HelloModelSchema.SchemaId);
         }
 
         public int RepeatCount

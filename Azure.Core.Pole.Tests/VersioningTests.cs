@@ -132,12 +132,10 @@ namespace Azure.Core.Pole.Tests
         private ServerVersionedModel(PoleReference reference) => _reference = reference;
 
         public static ServerVersionedModel Allocate(ArrayPoolHeap heap, byte version)
-        {
+        { 
             int size = ModelSchema.GetSize(version);
-            PoleReference reference = heap.Allocate(size);
-
             ulong typeId = ModelSchema.GetTypeId(version);
-            reference.WriteUInt64(0, typeId);
+            PoleReference reference = heap.AllocateObject(size, typeId);
             return new ServerVersionedModel(reference);
         }
 

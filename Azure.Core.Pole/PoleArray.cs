@@ -7,30 +7,33 @@ namespace Azure.Core.Pole
 {
     public class PoleArray<T> : IReadOnlyList<T>
     {
-        const int LengthOffset = 0;
-        const int ItemSizeOffset = 4; // TODO: we don't need size both here and in T. Maybe we should just encode the item schema ID?
-        const int ItemsOffset = 8;
+        const ulong ArrayId = PoleType.ArrayId;
+        const int LengthOffset = 8;
+        const int ItemSizeOffset = 12;
+        const int ItemsOffset = 16;
+        const int SizeHeader = 20;
 
         readonly PoleReference _reference;
 
         public PoleArray(PoleReference reference)
         {
-            // TODO: verify that the reference is indeed PoleArray<T>
+            var typeId = reference.ReadTypeId();
+            if ((typeId & 0xFFFFFFFFFFFFFF00) != ArrayId) throw new InvalidCastException("invalid cast");
             _reference = reference;
         }
         public PoleReference Reference => _reference;
 
-        public static PoleArray<T> Allocate(ArrayPoolHeap heap, int length)
+        public PoleArray(PoleHeap heap, int length)
         {
-            if (!PoleType.TryGetSize(typeof(T), out int size))
+            if (!PoleType.TryGetSize(typeof(T), out int itemSize))
             {
                 throw new InvalidOperationException($"{typeof(T)} is not a POLE type.");
             }
-            var bufferLength = size * length + sizeof(int) + sizeof(int);
-            var reference = heap.Allocate(bufferLength);
-            reference.WriteInt32(LengthOffset, length);
-            reference.WriteInt32(ItemSizeOffset, size);
-            return new PoleArray<T>(reference);
+
+            int size = SizeHeader + length * itemSize;
+            _reference = heap.AllocateObject(size, ArrayId);
+            _reference.WriteInt32(LengthOffset, length);
+            _reference.WriteInt32(ItemSizeOffset, itemSize);
         }
 
         public T this[int index]
@@ -84,7 +87,6 @@ namespace Azure.Core.Pole
                 }
             }
         }
-
         public int Count => _reference.ReadInt32(LengthOffset);
 
         private int ItemSize => _reference.ReadInt32(ItemSizeOffset);

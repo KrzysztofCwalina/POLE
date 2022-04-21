@@ -35,7 +35,7 @@ namespace Azure.Core.Pole.Tests
         private Stream MockedGet(ushort apiVersions)
         {
             var heap = new ArrayPoolHeap();
-            var model = ServerModel.Allocate(heap, apiVersions);
+            var model = new ServerModel(heap, apiVersions);
             model.Number = 5;
             if (apiVersions > 1)
             {
@@ -109,12 +109,10 @@ namespace Azure.Core.Pole.Tests
 
         private ServerModel(PoleReference reference) => _reference = reference;
 
-        public static ServerModel Allocate(ArrayPoolHeap heap, ushort version)
+        public ServerModel(ArrayPoolHeap heap, ushort version)
         {
             int size = ClientServerSchema.GetSize(version);
-            PoleReference reference = heap.Allocate(size);
-            reference.WriteTypeId(ClientServerSchema.GetSchema(version));
-            return new ServerModel(reference);
+            _reference = heap.AllocateObject(size, ClientServerSchema.GetSchema(version));
         }
         public int Number
         {

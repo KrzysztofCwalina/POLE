@@ -15,18 +15,18 @@ namespace Azure.Core.Pole.Tests
             {
                 using ArrayPoolHeap heap = new ArrayPoolHeap();
 
-                var model = TestModels.Server.ModelWithArray.Allocate(heap);
-                var integers = PoleArray<int>.Allocate(heap, 2);
+                var model = new TestModels.Server.ModelWithArray(heap);
+                var integers = new PoleArray<int>(heap, 2);
                 model.Integers = integers;
 
                 integers[0] = 5;
                 integers[1] = 20;
 
-                var strings = PoleArray<Utf8>.Allocate(heap, 2);
+                var strings = new PoleArray<Utf8>(heap, 2);
                 model.Strings = strings;
 
-                strings[0] = Utf8.Allocate(heap, "Hello, ");
-                strings[1] = Utf8.Allocate(heap, "World!");
+                strings[0] = new Utf8(heap, "Hello, ");
+                strings[1] = new Utf8(heap, "World!");
 
                 heap.WriteTo(stream);
             }
@@ -47,9 +47,9 @@ namespace Azure.Core.Pole.Tests
             var stream = new MemoryStream();
             {
                 using ArrayPoolHeap heap = new();
-                var utf8 = PoleArray<Utf8>.Allocate(heap, 2);
-                utf8[0] = Utf8.Allocate(heap, "ABC");
-                utf8[1] = Utf8.Allocate(heap, "DEF");
+                var utf8Strings = new PoleArray<Utf8>(heap, 2);
+                utf8Strings[0] = new Utf8(heap, "ABC");
+                utf8Strings[1] = new Utf8(heap, "DEF");
 
                 heap.WriteTo(stream);
                 stream.Position = 0;
@@ -70,7 +70,7 @@ namespace Azure.Core.Pole.Tests
             var stream = new MemoryStream();
             {
                 using ArrayPoolHeap heap = new();
-                var array = PoleArray<ServerStructModel>.Allocate(heap, 2);
+                var array = new PoleArray<ServerStructModel>(heap, 2);
                 array[0].Set(1, 2);
                 array[1].Set(3, 4);
 

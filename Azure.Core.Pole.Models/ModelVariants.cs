@@ -24,8 +24,7 @@ namespace Azure.Core.Pole.TestModels
         public void Serialize(Stream stream)
         {
             var heap = new ArrayPoolHeap(); // TODO: this should write to stack spans, then to stream
-            var reference = heap.Allocate(ModelSchema.Size);
-            reference.WriteTypeId(ModelSchema.SchemaId);
+            var reference = heap.AllocateObject(ModelSchema.Size, ModelSchema.SchemaId);
             reference.WriteInt32(ModelSchema.RepeatCountOffset, RepeatCount);
             reference.WriteBoolean(ModelSchema.IsEnabledOffset, IsEnabled);
             reference.WriteString(ModelSchema.MessageOffset, Message);
@@ -90,14 +89,13 @@ namespace Azure.Core.Pole.TestModels
         public void Serialize(Stream stream)
         {
             var heap = new ArrayPoolHeap(); // TODO: this should write directly to pipe, not to in memory buffers
-            var reference = heap.Allocate(ModelSchema.Size);
-            reference.WriteTypeId(ModelSchema.SchemaId);
+            var reference = heap.AllocateObject(ModelSchema.Size, ModelSchema.SchemaId);
             reference.WriteInt32(ModelSchema.RepeatCountOffset, RepeatCount);
             reference.WriteBoolean(ModelSchema.IsEnabledOffset, IsEnabled);
 
             if (_message != null) // mutated
             {
-                var message = Utf8.Allocate(heap, _message);
+                var message = new Utf8(heap, _message);
                 reference.WriteUtf8(ModelSchema.MessageOffset, message);
             }
             else
@@ -162,8 +160,7 @@ namespace Azure.Core.Pole.TestModels
 
         public static ServerResponseModel Allocate(ArrayPoolHeap heap)
         {
-            PoleReference reference = heap.Allocate(ModelSchema.Size);
-            reference.WriteTypeId(ModelSchema.SchemaId);
+            PoleReference reference = heap.AllocateObject(ModelSchema.Size, ModelSchema.SchemaId);
             return new ServerResponseModel(reference);
         }
 

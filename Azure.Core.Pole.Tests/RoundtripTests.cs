@@ -26,7 +26,7 @@ namespace Azure.Core.Pole.Tests
                 using ArrayPoolHeap heap = new ArrayPoolHeap();
                 ServerResponseModel model = ServerResponseModel.Allocate(heap);
 
-                model.Message = Utf8.Allocate(heap, "Hello");
+                model.Message = new Utf8(heap, "Hello");
                 model.IsEnabled = true;
                 model.RepeatCount = 5;
 

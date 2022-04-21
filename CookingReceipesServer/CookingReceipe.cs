@@ -16,11 +16,7 @@ namespace CookingReceipesServer
         private readonly PoleReference _reference;
 
         public CookingReceipe(PoleHeap heap)
-        {
-            PoleReference reference = heap.Allocate(Schema.Size);
-            reference.WriteTypeId(Schema.SchemaId);
-            _reference = reference;
-        }
+            => _reference = heap.AllocateObject(Schema.Size, Schema.SchemaId); 
 
         public ReadOnlySpan<byte> Title
         {

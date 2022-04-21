@@ -21,7 +21,7 @@ namespace Azure.Core.Pole.Tests
 
                 parent.Foo = 32;
                 parent.Bar = true;
-                parent.Bag = Utf8.Allocate(heap, "Hello World!");
+                parent.Bag = new Utf8(heap, "Hello World!");
                 child.Bat = true;
 
                 heap.WriteTo(stream);

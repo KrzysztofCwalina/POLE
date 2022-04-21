@@ -17,7 +17,7 @@ namespace Azure.Core.Pole
             _written = RootOffset;
         }
 
-        public override PoleReference Allocate(int size)
+        protected override PoleReference Allocate(int size)
         {
             var reference = new PoleReference(this, _written);
             _buffer.Slice(_written, size).Span.Fill(0);

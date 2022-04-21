@@ -6,7 +6,9 @@ namespace Azure.Core.Pole.TestModels
 {
     public struct ParentModel : IObject // TODO: how can we remove this?
     {
-        const int FooOffset = 0;                        // int
+        public const ulong SchemaId = 0xAFFFFFFFFFFFFF00;
+
+        const int FooOffset = sizeof(ulong);            // int
         const int BarOffset = FooOffset + sizeof(int);  // bool
         const int BazOffset = BarOffset + sizeof(byte); // object
         const int BagOffset = BazOffset + sizeof(int);  // object
@@ -17,7 +19,7 @@ namespace Azure.Core.Pole.TestModels
         PoleReference IObject.Reference => _reference; 
         private ParentModel(PoleReference reference) => _reference = reference;
 
-        public static ParentModel Allocate(ArrayPoolHeap heap) => new (heap.Allocate(ParentModel.Size));
+        public static ParentModel Allocate(ArrayPoolHeap heap) => new (heap.AllocateObject(Size, SchemaId));
         public static ParentModel Deserialize(ArrayPoolHeap heap) => new (heap.GetRoot());
 
         public int Foo
@@ -47,6 +49,7 @@ namespace Azure.Core.Pole.TestModels
 
     public readonly struct ChildModel : IObject
     {
+        public const ulong SchemaId = 0xBFFFFFFFFFFFFF00;
         const int batOffset = 0; // bool
         const int Size = sizeof(byte);
 
@@ -54,7 +57,7 @@ namespace Azure.Core.Pole.TestModels
         PoleReference IObject.Reference => _reference;
         internal ChildModel(PoleReference reference) => _reference = reference;
 
-        public static ChildModel Allocate(ArrayPoolHeap heap) => new(heap.Allocate(ChildModel.Size));
+        public static ChildModel Allocate(ArrayPoolHeap heap) => new(heap.AllocateObject(Size, SchemaId));
 
         public bool Bat
         {

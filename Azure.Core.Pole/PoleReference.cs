@@ -22,6 +22,7 @@ namespace Azure.Core.Pole
         public static PoleReference Null => new PoleReference(null, 0);
 
         public ushort ReadUInt16(int offset) => BinaryPrimitives.ReadUInt16LittleEndian(_heap.GetBytes(_address + offset));
+
         public void WriteUInt16(int offset, ushort value) => BinaryPrimitives.WriteUInt16LittleEndian(_heap.GetBytes(_address + offset), value);
         public int ReadInt32(int offset) => BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset));
 
@@ -44,7 +45,7 @@ namespace Azure.Core.Pole
         }
         public void WriteObject<T>(int offset, T value) where T : IObject => WriteReference(offset, value.Reference);
 
-        public void WriteString(int offset, string value) => WriteUtf8(offset, Utf8.Allocate(_heap, value));
+        public void WriteString(int offset, string value) => WriteUtf8(offset, new Utf8(_heap, value));
         public string ReadString(int offset) => ReadUtf8(offset).ToString();
 
         public Utf8 ReadUtf8(int offset) => new Utf8(ReadReference(offset));
@@ -52,10 +53,11 @@ namespace Azure.Core.Pole
         
         public void WriteByteBuffer(int offset, ReadOnlySpan<byte> value)
         {
-            var reference = _heap.Allocate(value.Length + 4);
-            Span<byte> destination = _heap.GetBytes(reference.Address, value.Length + 4);
-            BinaryPrimitives.WriteInt32LittleEndian(destination, value.Length);
-            value.CopyTo(destination.Slice(4));
+            var reference = _heap.AllocateBuffer(value.Length);
+            Span<byte> bytes = reference._heap.GetBytes(reference._address);
+            var length = BinaryPrimitives.ReadInt32LittleEndian(bytes);
+            var destination = bytes.Slice(4, length);
+            value.CopyTo(destination);
             this.WriteReference(offset, reference);
         }
         public ReadOnlySpan<byte> ReadByteBuffer(int offset)

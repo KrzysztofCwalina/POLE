@@ -26,7 +26,7 @@ namespace Azure.Core.Pole
             _written = RootOffset;
         }
         
-        public override PoleReference Allocate(int size)
+        protected override PoleReference Allocate(int size)
         {
             var address = _written;
             _written += size;
@@ -35,9 +35,6 @@ namespace Azure.Core.Pole
 
         public override Span<byte> GetBytes(int address, int length = -1)
             => _buffer.Span.Slice(address, length == -1 ? _buffer.Length - address : length);
-
-        //public override ReadOnlySpan<byte> ReadBytes(int address, int length = -1)
-        //    => GetBytes(address, length);
 
         public override byte this[int address]
         {

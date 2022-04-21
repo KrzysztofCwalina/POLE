@@ -9,8 +9,8 @@ namespace Azure.Core.Pole.Tests
         [Test]
         public void NoGarbage()
         {
-            using ArrayPoolHeap heap = new ArrayPoolHeap();
-            HelloModel model = HelloModel.Allocate(heap);
+            using var heap = new ArrayPoolHeap();
+            HelloModel model = new HelloModel(heap);
 
             model.Message = "Hello, ";
 
