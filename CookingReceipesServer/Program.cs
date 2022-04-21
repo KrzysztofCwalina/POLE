@@ -3,8 +3,6 @@
 
 using Azure.Core.Pole;
 using CookingReceipesServer;
-using System.Buffers.Binary;
-using System.IO.Pipelines;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
@@ -33,16 +31,9 @@ app.MapPost("/receipes/", async (HttpContext context) =>
     var request = context.Request;
     if (request.ContentType == "application/pole")
     {
-        PipeReader reader = request.BodyReader;
-        ReadResult result = await reader.ReadAtLeastAsync(4);
-        var len = BinaryPrimitives.ReadInt32LittleEndian(result.Buffer.FirstSpan);
-        reader.AdvanceTo(result.Buffer.Start, result.Buffer.End);
-        result = await reader.ReadAtLeastAsync(len);
-        if (!result.Buffer.IsSingleSegment) throw new NotImplementedException();
-        var memory = result.Buffer.First;
-        var data = BinaryData.FromBytes(memory);
-        var receipe = new CookingReceipeSubmission(data);
-        await reader.CompleteAsync();
+        CookingReceipeSubmission receipe = await CookingReceipeSubmission.ReadAsync(request.BodyReader);
+
+        await request.BodyReader.CompleteAsync(); // TODO: receipe cannot be used past this point. Should there be a "detach" method?
     }
 
     context.Response.StatusCode = 200;

@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Core.Pole;
+using System.Buffers.Binary;
+using System.IO.Pipelines;
 
 namespace CookingReceipesServer
 {
@@ -57,8 +59,20 @@ namespace CookingReceipesServer
 
         private readonly ReadOnlyPoleReference _reference;
 
-        internal CookingReceipeSubmission(BinaryData poleData)
-            => _reference = new ReadOnlyPoleReference(poleData, Schema.SchemaId);
+        internal static async Task<CookingReceipeSubmission> ReadAsync(PipeReader reader)
+        {
+            // TODO: this needs to be moved to a library
+            ReadResult result = await reader.ReadAtLeastAsync(4);
+            var len = BinaryPrimitives.ReadInt32LittleEndian(result.Buffer.FirstSpan);
+            reader.AdvanceTo(result.Buffer.Start, result.Buffer.End);
+            result = await reader.ReadAtLeastAsync(len);
+            if (!result.Buffer.IsSingleSegment) throw new NotImplementedException();
+            var memory = result.Buffer.First;
+            var data = BinaryData.FromBytes(memory);
+            return new CookingReceipeSubmission(data);
+        }
+        private CookingReceipeSubmission(BinaryData poleData)
+            =>_reference = new ReadOnlyPoleReference(poleData, Schema.SchemaId);  
 
         public Utf8 Title => _reference.ReadUtf8(Schema.TitleOffset);
         public Utf8 Ingredients => _reference.ReadUtf8(Schema.IngredientsOffset);
