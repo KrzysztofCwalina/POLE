@@ -11,20 +11,20 @@ namespace Azure.Core.Pole
         public const int TypeIdOffset = 0;
         public const int ObjectDataOffset = 8;
 
-        readonly int _objectAddress; // TODO: should this be data address, and ObjectAddress (below) be computed?
+        readonly int _dataAddress;
         readonly ReadOnlyMemory<byte> _memory;
 
-        public ReadOnlyPoleReference(BinaryData poleData, ulong schemaId)
+        public ReadOnlyPoleReference(BinaryData poleData, ulong expectedSchemaId)
         {
             _memory = poleData.ToMemory();
-            _objectAddress = PoleHeap.RootOffset;
+            _dataAddress = PoleHeap.RootOffset + ObjectDataOffset;
 
             var typeId = this.ReadTypeId();
-            if ((typeId & PoleType.SchemaIdMask) != schemaId) throw new InvalidCastException("invalid cast");
+            if ((typeId & PoleType.SchemaIdMask) != expectedSchemaId) throw new InvalidCastException("invalid cast");
         }
 
-        internal int ObjectAddress => _objectAddress;
-        internal int DataAddress => _objectAddress + ObjectDataOffset;
+        internal int ObjectAddress => _dataAddress - ObjectDataOffset;
+        internal int DataAddress => _dataAddress;
 
         private ulong ReadTypeId()
             => BinaryPrimitives.ReadUInt64LittleEndian(_memory.Span.Slice(ObjectAddress));
@@ -40,6 +40,18 @@ namespace Azure.Core.Pole
             int stringLength = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(stringAddress + ObjectDataOffset, sizeof(int)));
             ReadOnlySpan<byte> stringBytes = span.Slice(stringAddress + ObjectDataOffset + sizeof(int), stringLength);
             return stringBytes.ToStringAsciiNoAlloc();
+        }
+
+        public override string ToString()
+        {
+            var typeId = ReadTypeId();
+            switch (typeId)
+            {
+                case PoleType.Int32Id: return "Int32";
+                case PoleType.ByteBufferId: return "byte[]";
+                case PoleType.ArrayId: return "object[]";
+                default: return typeId.ToString();
+            }
         }
     }
 }

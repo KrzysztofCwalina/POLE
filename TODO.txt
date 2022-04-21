@@ -1,14 +1,9 @@
 Pri 0
-- too memory inefficient with all these type IDs
-	a) make ID smaller and have longer payload header ID
-	b) make Ids be debug only
-
 - implement in-out and out-in models for the client
 - remove all deserialize methods and add ctors that take BinaryData. But what about multi-buffer?
 - make header structured (len, version, etc.)
 - make sure multi-buffer server code works
 - implement client/server performance test
-- cleanup models based on client/server sample
 - object array
 - alow for composing objects, i.e. object inline in anothere object
 - allow arrays be inline in objects
@@ -16,6 +11,10 @@ Pri 0
 - support dictionaries
 
 Pri 1
+- cleanup models based on client/server sample
+- too memory inefficient with all these type IDs
+	a) make ID smaller and have longer payload header ID
+	b) make IDs be debug only
 - can model variants be consolidated/simplified?
 - finish generator
 - support generating client + server

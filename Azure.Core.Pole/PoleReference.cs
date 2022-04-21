@@ -13,21 +13,21 @@ namespace Azure.Core.Pole
         public const int TypeIdOffset = 0;
         public const int ObjectDataOffset = 8;
 
-        readonly int _address;
+        readonly int _dataAddress;
         readonly PoleHeap _heap;
 
         public PoleReference(PoleHeap heap, int address) 
         {
             _heap = heap;
-            _address = address;
+            _dataAddress = address + ObjectDataOffset;
         }
 
-        internal int ObjectAddress => _address;
-        internal int DataAddress => _address + ObjectDataOffset;
+        internal int ObjectAddress => _dataAddress - ObjectDataOffset;
+        internal int DataAddress => _dataAddress;
 
         internal PoleHeap Heap => _heap;
         
-        public bool IsNull => _address == 0;
+        public bool IsNull => _dataAddress == ObjectDataOffset;
         public static PoleReference Null => new PoleReference(null, 0);
 
         public ushort ReadUInt16(int offset) => BinaryPrimitives.ReadUInt16LittleEndian(_heap.GetBytes(DataAddress + offset));
@@ -87,6 +87,18 @@ namespace Azure.Core.Pole
             var ctor = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new Type[] { typeof(PoleReference) }, Array.Empty<ParameterModifier>());
             var value = ctor.Invoke(new object[] { this });
             return value;
+        }
+
+        public override string ToString()
+        {
+            var typeId = ReadTypeId();
+            switch (typeId)
+            {
+                case PoleType.Int32Id: return "Int32";
+                case PoleType.ByteBufferId: return "byte[]";
+                case PoleType.ArrayId: return "object[]";
+                default: return typeId.ToString();
+            }
         }
     }
 }
