@@ -17,6 +17,7 @@ app.MapGet("/receipes/{id}", (HttpContext context) =>
     var heap = new PipelineHeap(writer);
 
     CookingReceipe receipe = new CookingReceipe(heap);
+    receipe.Id = 303;
     receipe.Title = "Polish Pierogi";
     receipe.Directions = "Mix ingredients, make pierogi, and cook in a pot of hot water.";
     receipe.Ingredients = "Flour, water, salt, potatoes, white cheese, onion.";

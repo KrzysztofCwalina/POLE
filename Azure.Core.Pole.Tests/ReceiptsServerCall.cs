@@ -16,6 +16,7 @@ namespace Azure.Core.Pole.Tests
             CookingReceipe receipe = client.GetReceipe(303);
 
             Assert.AreEqual("Polish Pierogi", receipe.Title);
+            Assert.AreEqual(303, receipe.Id);
         }
 
         [Test]

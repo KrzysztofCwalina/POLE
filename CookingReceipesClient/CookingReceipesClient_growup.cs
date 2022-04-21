@@ -51,7 +51,8 @@ namespace Azure.Cooking.Receipes
             public const int TitleOffset = 0;
             public const int IngredientsOffset = 4;
             public const int DirectionsOffset = 8;
-            public const int Size = 12;
+            public const int IdOffset = 12;
+            public const int Size = 16;
         }
 
         private readonly ReadOnlyPoleReference _reference;
@@ -64,13 +65,15 @@ namespace Azure.Cooking.Receipes
         public string Ingredients => _reference.ReadString(Schema.IngredientsOffset);
 
         public string Directions => _reference.ReadString(Schema.DirectionsOffset);
+
+        public int Id => _reference.ReadInt32(Schema.IdOffset);
     }
 
     public class CookingReceipeSubmission
     {
         internal struct Schema
         {
-            public const ulong SchemaId = 0xFFFFFFFFFFFFFE00;
+            public const ulong SchemaId = 0xFFFFFFFFFFFFFD00;
             public const int TitleOffset = 0;
             public const int IngredientsOffset = 4;
             public const int DirectionsOffset = 8;

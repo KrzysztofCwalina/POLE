@@ -13,7 +13,8 @@ namespace CookingReceipesServer
             public const int TitleOffset = 0;
             public const int IngredientsOffset = 4;
             public const int DirectionsOffset = 8;
-            public const int Size = 12;
+            public const int IdOffset = 12;
+            public const int Size = 16;
         }
 
         private readonly PoleReference _reference;
@@ -35,6 +36,11 @@ namespace CookingReceipesServer
         {
             get => _reference.ReadByteBuffer(Schema.DirectionsOffset);
             set => _reference.WriteByteBuffer(Schema.DirectionsOffset, value);
+        }
+        public int Id
+        {
+            get => _reference.ReadInt32(Schema.IdOffset);
+            set => _reference.WriteInt32(Schema.IdOffset, value);
         }
     }
 }
