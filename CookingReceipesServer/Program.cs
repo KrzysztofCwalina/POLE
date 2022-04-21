@@ -33,8 +33,8 @@ app.MapPost("/receipes/", (HttpContext context) =>
 
     int receipeId = 303;
     var heap = new PipelineHeap(writer);
-    var reference = heap.AllocateObject(12, PoleType.Int32Id);
-    reference.WriteInt32(8, receipeId);
+    var reference = heap.AllocateObject(sizeof(int), PoleType.Int32Id);
+    reference.WriteInt32(offset: 0, receipeId);
     context.Response.ContentLength = heap.TotalWritten;
     heap.Complete();
 });

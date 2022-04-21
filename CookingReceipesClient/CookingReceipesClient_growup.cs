@@ -37,7 +37,7 @@ namespace Azure.Cooking.Receipes
             if (response.IsError) throw new RequestFailedException(response);
 
             var reference = new ReadOnlyPoleReference(response.Content, PoleType.Int32Id);
-            int id = reference.ReadInt32(8);
+            int id = reference.ReadInt32(offset: 0);
 
             return Response.FromValue(id, response);
         }
