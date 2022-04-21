@@ -26,7 +26,7 @@ namespace Azure.Core.Pole.Tooling
         private void GenerateClientOptionsType(Type type, string folder)
         {
             var filename = Path.Combine(folder, type.Name + "Options.cs");
-            using var writer = new SourceWriter(filename);
+            using var writer = new SourceWriter(filename, _fileHeader);
 
             writer.WriteLine("using Azure;");
             writer.WriteLine("using Azure.Core;");

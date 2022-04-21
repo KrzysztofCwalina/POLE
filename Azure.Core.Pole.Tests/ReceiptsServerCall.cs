@@ -19,7 +19,7 @@ namespace Azure.Core.Pole.Tests
         }
 
         [Test]
-        //[Ignore("live test")]
+        [Ignore("live test")]
         public void AddReceipe()
         {
             var client = new CookingReceipesClient();

@@ -11,7 +11,7 @@ namespace Azure.Core.Pole.Tooling
     {
         TextWriter _writer;
 
-        public SourceWriter(string path, string fileHeader = default)
+        public SourceWriter(string path, string fileHeader)
         {
             Stream stream = File.OpenWrite(path);
             _writer = new StreamWriter(stream);
