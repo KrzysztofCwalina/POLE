@@ -9,9 +9,9 @@ namespace Azure.Core.Pole.TestModels
 {
     public struct ParentModel : IObject // TODO: how can we remove this?
     {
-        public const ulong SchemaId = 0xAFFFFFFFFFFFFF00;
+        public const ulong SchemaId = 0xFFFFFFFFFFFFFE00;
 
-        const int FooOffset = sizeof(ulong);            // int
+        const int FooOffset = 0;                         // int
         const int BarOffset = FooOffset + sizeof(int);  // bool
         const int BazOffset = BarOffset + sizeof(byte); // object
         const int BagOffset = BazOffset + sizeof(int);  // object
@@ -52,8 +52,8 @@ namespace Azure.Core.Pole.TestModels
 
     public readonly struct ChildModel : IObject
     {
-        public const ulong SchemaId = 0xBFFFFFFFFFFFFF00;
-        const int batOffset = 0; // bool
+        public const ulong SchemaId = 0xFFFFFFFFFFFFFD00;
+        const int BatOffset = 0; // bool
         const int Size = sizeof(byte);
 
         readonly PoleReference _reference;
@@ -64,8 +64,8 @@ namespace Azure.Core.Pole.TestModels
 
         public bool Bat
         {
-            get => _reference.ReadBoolean(batOffset);
-            set => _reference.WriteBoolean(batOffset, value);
+            get => _reference.ReadBoolean(BatOffset);
+            set => _reference.WriteBoolean(BatOffset, value);
         }
     }
 }

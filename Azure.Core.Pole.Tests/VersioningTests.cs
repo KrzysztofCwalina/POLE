@@ -52,11 +52,11 @@ namespace Azure.Core.Pole.Tests
     {
         const ulong SchemaId = 0xfe106fc3b2994200;
 
-        public const int NumberOffset = 8;
-        public const int MultiplierOffset = 12; // added in V2
+        public const int NumberOffset = 0;
+        public const int MultiplierOffset = 4; // added in V2
 
-        const int SizeV0 = 12;
-        const int SizeV1 = 16;
+        const int SizeV0 = 4;
+        const int SizeV1 = 8;
 
         public static int GetSize(byte version)
         {
@@ -66,7 +66,7 @@ namespace Azure.Core.Pole.Tests
         }
         public static bool SchemaMatches(ulong typeId)
         {
-            var schema = (typeId & 0xFFFFFFFFFFFFFF00);
+            var schema = (typeId & PoleType.SchemaIdMask);
             return schema == SchemaId;
         }
        
@@ -121,11 +121,12 @@ namespace Azure.Core.Pole.Tests
         {
             get
             {
-                if (ModelSchema.GetVersion(Type) > 0) return _reference.ReadInt32(ModelSchema.MultiplierOffset);
+                if (Version > 0) return _reference.ReadInt32(ModelSchema.MultiplierOffset);
                 return null;
             }
         }   
-        private ulong Type => _reference.ReadUInt64(0);
+        private ulong Type => _reference.ReadTypeId();
+        private int Version => ModelSchema.GetVersion(Type);
     }
 
     public class ServerVersionedModel

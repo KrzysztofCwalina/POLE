@@ -13,9 +13,9 @@ namespace Azure.Core.Pole.TestModels
     {
         public const ulong SchemaId = 0xfe106fc3b2994200;
 
-        public const int IntegersOffset = 16;
-        public const int StringsOffset = 20;
-        public const int Size = 24;
+        public const int IntegersOffset = 0;
+        public const int StringsOffset = 4;
+        public const int Size = 8;
     }
 
     public class ModelWithArray

@@ -12,10 +12,10 @@ namespace Azure.Core.Pole.TestModels
     {
         public const ulong SchemaId = 0xfe106fc3b2994200;
 
-        public const int RepeatCountOffset = 16;
-        public const int IsEnabledOffset = 20;
-        public const int MessageOffset = 21;
-        public const int Size = 25;
+        public const int RepeatCountOffset = 0;
+        public const int IsEnabledOffset = 4;
+        public const int MessageOffset = 5;
+        public const int Size = 9;
     }
 
     // used on the client to compose requests, aka input model

@@ -9,11 +9,11 @@ namespace CookingReceipesServer
     {
         private struct Schema
         {
-            public const ulong SchemaId = 0xFFFFFFFFFFFFFF00;
-            public const int TitleOffset = 8; // TODO (pri 0): can schema offset be implicit, i.e. filed offsets start at 0
-            public const int IngredientsOffset = 12;
-            public const int DirectionsOffset = 16;
-            public const int Size = 20;
+            public const ulong SchemaId = 0xFFFFFFFFFFFFFE00;
+            public const int TitleOffset = 0;
+            public const int IngredientsOffset = 4;
+            public const int DirectionsOffset = 8;
+            public const int Size = 12;
         }
 
         private readonly PoleReference _reference;

@@ -7,18 +7,22 @@ namespace Azure.Core.Pole
 {
     public abstract class PoleHeap : IDisposable
     {
+        public const int LengthOffset = 0;
+        public const int RootOffset = 4; 
+
         protected abstract PoleReference AllocateCore(int size);
         public PoleReference AllocateObject(int size, ulong typeId)
         {
             // TODO: throw if the ID conflicts with built-in IDs
-            var reference = AllocateCore(size);
+            var reference = AllocateCore(size + sizeof(ulong));
             reference.WriteTypeId(typeId);
             return reference;
         }
-        public PoleReference AllocateByteBuffer(int size) // TODO: should byte buffer be an object, i.e. have type ID?
+        public PoleReference AllocateByteBuffer(int length) // TODO: should byte buffer be an object, i.e. have type ID?
         {
-            var reference = AllocateCore(size + 4);
-            reference.WriteInt32(0, size);
+            var reference = AllocateCore(length + 4 + sizeof(ulong));
+            reference.WriteTypeId(PoleType.ByteBufferId);
+            reference.WriteInt32(0, length);
             return reference;
         }
 
@@ -30,7 +34,5 @@ namespace Azure.Core.Pole
 
         public void Dispose() => Dispose(true);
         protected virtual void Dispose(bool isDisposing) { }
-
-        public const int RootOffset = 4; // TODO: should pole heap be a pole object (a dynamic object)?
     }
 }

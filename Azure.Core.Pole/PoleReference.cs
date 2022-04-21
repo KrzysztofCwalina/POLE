@@ -3,12 +3,16 @@
 
 using System;
 using System.Buffers.Binary;
+using System.ComponentModel;
 using System.Reflection;
 
 namespace Azure.Core.Pole
 {
     public readonly struct PoleReference
     {
+        public const int TypeIdOffset = 0;
+        public const int ObjectDataOffset = 8;
+
         readonly int _address;
         readonly PoleHeap _heap;
 
@@ -18,25 +22,27 @@ namespace Azure.Core.Pole
             _address = address;
         }
 
-        internal int Address => _address;
+        internal int ObjectAddress => _address;
+        internal int DataAddress => _address + ObjectDataOffset;
+
         internal PoleHeap Heap => _heap;
         
         public bool IsNull => _address == 0;
         public static PoleReference Null => new PoleReference(null, 0);
 
-        public ushort ReadUInt16(int offset) => BinaryPrimitives.ReadUInt16LittleEndian(_heap.GetBytes(_address + offset));
+        public ushort ReadUInt16(int offset) => BinaryPrimitives.ReadUInt16LittleEndian(_heap.GetBytes(DataAddress + offset));
 
-        public void WriteUInt16(int offset, ushort value) => BinaryPrimitives.WriteUInt16LittleEndian(_heap.GetBytes(_address + offset), value);
-        public int ReadInt32(int offset) => BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset));
+        public void WriteUInt16(int offset, ushort value) => BinaryPrimitives.WriteUInt16LittleEndian(_heap.GetBytes(DataAddress + offset), value);
+        public int ReadInt32(int offset) => BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(DataAddress + offset));
 
-        public void WriteInt32(int offset, int value) => BinaryPrimitives.WriteInt32LittleEndian(_heap.GetBytes(_address + offset), value);
-        public ulong ReadUInt64(int offset) => BinaryPrimitives.ReadUInt64LittleEndian(_heap.GetBytes(_address + offset));
-        public void WriteUInt64(int offset, ulong value) => BinaryPrimitives.WriteUInt64LittleEndian(_heap.GetBytes(_address + offset), value);
-        public bool ReadBoolean(int offset) => _heap[_address + offset] != 0;
-        public void WriteBoolean(int offset, bool value) => _heap[_address + offset] = value ? (byte)1 : (byte)0;
+        public void WriteInt32(int offset, int value) => BinaryPrimitives.WriteInt32LittleEndian(_heap.GetBytes(DataAddress + offset), value);
+        public ulong ReadUInt64(int offset) => BinaryPrimitives.ReadUInt64LittleEndian(_heap.GetBytes(DataAddress + offset));
+        public void WriteUInt64(int offset, ulong value) => BinaryPrimitives.WriteUInt64LittleEndian(_heap.GetBytes(DataAddress + offset), value);
+        public bool ReadBoolean(int offset) => _heap[DataAddress + offset] != 0;
+        public void WriteBoolean(int offset, bool value) => _heap[DataAddress + offset] = value ? (byte)1 : (byte)0;
 
-        public ulong ReadTypeId() => ReadUInt64(0);
-        public void WriteTypeId(ulong typeId) => WriteUInt64(0, typeId);
+        public ulong ReadTypeId() => BinaryPrimitives.ReadUInt64LittleEndian(_heap.GetBytes(ObjectAddress));
+        public void WriteTypeId(ulong typeId) => BinaryPrimitives.WriteUInt64LittleEndian(_heap.GetBytes(ObjectAddress), typeId);
 
         public PoleReference ReadReference(int offset) => new PoleReference(_heap, ReadInt32(offset));
         public void WriteReference(int offset, PoleReference reference)
@@ -44,7 +50,7 @@ namespace Azure.Core.Pole
             PoleReference existing = ReadReference(offset);
             if (!existing.IsNull) throw new InvalidOperationException("model property can be assigned only once");
             if (!ReferenceEquals(this._heap, reference._heap)) throw new InvalidOperationException("Cross-heap references are not supported");
-            WriteInt32(offset, reference._address);
+            WriteInt32(offset, reference.ObjectAddress);
         }
         public void WriteObject<T>(int offset, T value) where T : IObject => WriteReference(offset, value.Reference);
 
@@ -57,7 +63,7 @@ namespace Azure.Core.Pole
         public void WriteByteBuffer(int offset, ReadOnlySpan<byte> value)
         {
             var reference = _heap.AllocateByteBuffer(value.Length);
-            Span<byte> bytes = reference._heap.GetBytes(reference._address);
+            Span<byte> bytes = reference._heap.GetBytes(reference.DataAddress);
             var length = BinaryPrimitives.ReadInt32LittleEndian(bytes);
             var destination = bytes.Slice(4, length);
             value.CopyTo(destination);
@@ -65,8 +71,8 @@ namespace Azure.Core.Pole
         }
         public ReadOnlySpan<byte> ReadByteBuffer(int offset)
         {
-            var len = BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(_address + offset));
-            return _heap.GetBytes(_address + sizeof(int), len);
+            var len = BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(DataAddress + offset));
+            return _heap.GetBytes(DataAddress + sizeof(int), len);
         }
 
         // TODO: can reflection be eliminated?

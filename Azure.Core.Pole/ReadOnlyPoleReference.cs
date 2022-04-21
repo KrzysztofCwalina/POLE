@@ -8,37 +8,37 @@ namespace Azure.Core.Pole
 {
     public readonly struct ReadOnlyPoleReference
     {
-        readonly int _address;
+        public const int TypeIdOffset = 0;
+        public const int ObjectDataOffset = 8;
+
+        readonly int _objectAddress; // TODO: should this be data address, and ObjectAddress (below) be computed?
         readonly ReadOnlyMemory<byte> _memory;
 
         public ReadOnlyPoleReference(BinaryData poleData, ulong schemaId)
         {
             _memory = poleData.ToMemory();
-            _address = PoleHeap.RootOffset;
+            _objectAddress = PoleHeap.RootOffset;
 
             var typeId = this.ReadTypeId();
-            if ((typeId & 0xFFFFFFFFFFFFFF00) != schemaId) throw new InvalidCastException("invalid cast");
+            if ((typeId & PoleType.SchemaIdMask) != schemaId) throw new InvalidCastException("invalid cast");
         }
 
-        public ReadOnlyPoleReference(ReadOnlyMemory<byte> memory, int address)
-        {
-            _memory = memory;
-            _address = address;
-        }
+        internal int ObjectAddress => _objectAddress;
+        internal int DataAddress => _objectAddress + ObjectDataOffset;
 
-        public ulong ReadTypeId()
-            => BinaryPrimitives.ReadUInt64LittleEndian(_memory.Span.Slice(_address));
+        private ulong ReadTypeId()
+            => BinaryPrimitives.ReadUInt64LittleEndian(_memory.Span.Slice(ObjectAddress));
 
-        public int ReadInt32(int offset) => BinaryPrimitives.ReadInt32LittleEndian(_memory.Span.Slice(_address + offset));
+        public int ReadInt32(int offset) => BinaryPrimitives.ReadInt32LittleEndian(_memory.Span.Slice(DataAddress + offset));
 
-        public bool ReadBoolean(int offset) => _memory.Span[_address + offset] != 0;
+        public bool ReadBoolean(int offset) => _memory.Span[DataAddress + offset] != 0;
 
         public string ReadString(int offset)
         {
             var span = _memory.Span;
-            int stringAddress = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(_address + offset));
-            int stringLength = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(stringAddress, sizeof(int)));
-            ReadOnlySpan<byte> stringBytes = span.Slice(stringAddress + sizeof(int), stringLength);
+            int stringAddress = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(DataAddress + offset));
+            int stringLength = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(stringAddress + ObjectDataOffset, sizeof(int)));
+            ReadOnlySpan<byte> stringBytes = span.Slice(stringAddress + ObjectDataOffset + sizeof(int), stringLength);
             return stringBytes.ToStringAsciiNoAlloc();
         }
     }

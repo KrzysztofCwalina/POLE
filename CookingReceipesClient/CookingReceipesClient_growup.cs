@@ -1,14 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-using Azure;
 using Azure.Core;
 using Azure.Core.Pole;
 using System;
-using System.Data.Common;
-using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Azure.Cooking.Receipes
 {
@@ -51,11 +47,11 @@ namespace Azure.Cooking.Receipes
     {
         private struct Schema
         {
-            public const ulong SchemaId = 0xFFFFFFFFFFFFFF00;
-            public const int TitleOffset = 8;
-            public const int IngredientsOffset = 12;
-            public const int DirectionsOffset = 16;
-            public const int Size = 20;
+            public const ulong SchemaId = 0xFFFFFFFFFFFFFE00;
+            public const int TitleOffset = 0;
+            public const int IngredientsOffset = 4;
+            public const int DirectionsOffset = 8;
+            public const int Size = 12;
         }
 
         private readonly ReadOnlyPoleReference _reference;
@@ -75,10 +71,10 @@ namespace Azure.Cooking.Receipes
         internal struct Schema
         {
             public const ulong SchemaId = 0xFFFFFFFFFFFFFE00;
-            public const int TitleOffset = 8;
-            public const int IngredientsOffset = 12;
-            public const int DirectionsOffset = 16;
-            public const int Size = 20;
+            public const int TitleOffset = 0;
+            public const int IngredientsOffset = 4;
+            public const int DirectionsOffset = 8;
+            public const int Size = 12;
         }
 
         public CookingReceipeSubmission()

@@ -1,5 +1,8 @@
 Pri 0
-- implement input model for client
+- too memory inefficient with all these type IDs
+	a) make ID smaller and have longer payload header ID
+	b) make Ids be debug only
+
 - implement in-out and out-in models for the client
 - remove all deserialize methods and add ctors that take BinaryData. But what about multi-buffer?
 - make header structured (len, version, etc.)

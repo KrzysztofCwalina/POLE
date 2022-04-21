@@ -10,12 +10,12 @@ namespace Azure.Core.Pole.TestModels
 {
     internal struct HelloModelSchema
     {
-        public const ulong SchemaId = 0xfe106fc3b2994200; 
+        public const ulong SchemaId = 0xFFFFFFFFFFFFFE00; 
 
-        public const int RepeatCountOffset = 16;
-        public const int IsEnabledOffset = 20;
-        public const int MessageOffset = 21; // TODO: what about alignment?
-        public const int Size = 25;
+        public const int RepeatCountOffset = 0;
+        public const int MessageOffset = 4; 
+        public const int IsEnabledOffset = 8; // TODO: what about alignment?
+        public const int Size = 9;
     }
 
     public struct HelloModel
