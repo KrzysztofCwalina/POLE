@@ -1,4 +1,7 @@
-﻿using Azure.Core.Pole.Tooling;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+using Azure.Core.Pole.Tooling;
 using System;
 
 namespace Azure.Core.Pole.TestModels.Definitions

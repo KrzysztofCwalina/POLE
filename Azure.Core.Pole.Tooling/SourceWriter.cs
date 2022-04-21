@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+using System;
 using System.IO;
 using System.Reflection;
 
@@ -8,10 +11,15 @@ namespace Azure.Core.Pole.Tooling
     {
         TextWriter _writer;
 
-        public SourceWriter(string path)
+        public SourceWriter(string path, string fileHeader = default)
         {
             Stream stream = File.OpenWrite(path);
             _writer = new StreamWriter(stream);
+
+            if (fileHeader != default)
+            {
+                _writer.WriteLine(fileHeader);
+            }
         }
         public SourceWriter(TextWriter writer, bool close = false)
         {

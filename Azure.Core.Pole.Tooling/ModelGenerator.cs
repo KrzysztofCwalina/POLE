@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+using System;
 using System.IO;
 using System.Reflection;
 
@@ -6,11 +9,14 @@ namespace Azure.Core.Pole.Tooling
 {
     public class PoleGenerator
     {
+        string _fileHeader;
+        public PoleGenerator(string fileHeader) => _fileHeader = fileHeader;
+
         public void GenerateClientLibrary(Type type, string folder)
         {
             if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
             var filename = Path.Combine(folder, type.Name + ".cs");
-            using var writer = new SourceWriter(filename);
+            using var writer = new SourceWriter(filename, _fileHeader);
 
             GenerateClientType(type, writer);
 

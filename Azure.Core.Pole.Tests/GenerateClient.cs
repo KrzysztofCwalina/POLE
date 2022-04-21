@@ -1,5 +1,7 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 using Azure.Cooking.Receipes;
-using Azure.Core.Pole.TestModels.Definitions;
 using Azure.Core.Pole.Tooling;
 using NUnit.Framework;
 using System.IO;
@@ -11,7 +13,8 @@ namespace Azure.Core.Pole.Tests
         [Test]
         public void GenerateReceipesClient()
         {
-            var generator = new PoleGenerator();
+            var fileHeader = File.ReadAllText("..\\..\\..\\FileHeader.cs");
+            var generator = new PoleGenerator(fileHeader);
             generator.GenerateClientLibrary(typeof(CookingReceipesClient), "..\\..\\..\\..\\CookingReceipesClient");
         }
     }
