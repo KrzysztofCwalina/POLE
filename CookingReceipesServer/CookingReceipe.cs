@@ -1,4 +1,5 @@
 ﻿using Azure.Core.Pole;
+using System.Security.Cryptography.Xml;
 
 namespace CookingReceipesServer
 {
@@ -7,7 +8,7 @@ namespace CookingReceipesServer
         private struct Schema
         {
             public const ulong SchemaId = 0xFFFFFFFFFFFFFF00;
-            public const int TitleOffset = 8;
+            public const int TitleOffset = 8; // TODO (pri 0): can schema offset be implicit, i.e. filed offsets start at 0
             public const int IngredientsOffset = 12;
             public const int DirectionsOffset = 16;
             public const int Size = 20;

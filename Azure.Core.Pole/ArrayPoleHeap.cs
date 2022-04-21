@@ -26,7 +26,7 @@ namespace Azure.Core.Pole
             _written = RootOffset;
         }
         
-        protected override PoleReference Allocate(int size)
+        protected override PoleReference AllocateCore(int size)
         {
             var address = _written;
             _written += size;

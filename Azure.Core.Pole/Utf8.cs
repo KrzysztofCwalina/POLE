@@ -15,7 +15,7 @@ namespace Azure.Core.Pole
         public Utf8(PoleHeap heap, string str)
         {
             var strLength = Encoding.UTF8.GetByteCount(str);
-            _reference = heap.AllocateBuffer(strLength);
+            _reference = heap.AllocateByteBuffer(strLength);
             Span<byte> buffer = heap.GetBytes(_reference.Address + 4, strLength);
             if (!str.TryEncodeToUtf8(buffer, out var written))
             {

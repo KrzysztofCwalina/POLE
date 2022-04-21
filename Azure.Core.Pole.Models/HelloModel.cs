@@ -17,22 +17,11 @@ namespace Azure.Core.Pole.TestModels
 
     public struct HelloModel
     {
-        private readonly PoleReference _reference;
-        private HelloModel(PoleReference reference) => _reference = reference;
+        private readonly ReadOnlyPoleReference _reference;
+        private HelloModel(ReadOnlyPoleReference reference) => _reference = reference;
 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public static HelloModel Deserialize(ArrayPoolHeap heap)
-        {
-            var reference = heap.GetRoot();
-            if (reference.ReadTypeId() != HelloModelSchema.SchemaId) throw new InvalidCastException();
-            return new (reference);
-        } 
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public static HelloModel Deserialize(Stream stream)
-        {
-            var heap = ArrayPoolHeap.ReadFrom(stream);
-            return Deserialize(heap);
-        }
+        public HelloModel(BinaryData poleData)
+            => _reference = new ReadOnlyPoleReference(poleData, HelloModelSchema.SchemaId);
 
         public int RepeatCount => _reference.ReadInt32(HelloModelSchema.RepeatCountOffset);
 

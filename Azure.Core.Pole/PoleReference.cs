@@ -53,7 +53,7 @@ namespace Azure.Core.Pole
         
         public void WriteByteBuffer(int offset, ReadOnlySpan<byte> value)
         {
-            var reference = _heap.AllocateBuffer(value.Length);
+            var reference = _heap.AllocateByteBuffer(value.Length);
             Span<byte> bytes = reference._heap.GetBytes(reference._address);
             var length = BinaryPrimitives.ReadInt32LittleEndian(bytes);
             var destination = bytes.Slice(4, length);

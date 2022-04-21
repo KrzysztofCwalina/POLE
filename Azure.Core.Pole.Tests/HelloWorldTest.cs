@@ -1,5 +1,6 @@
 using Azure.Core.Pole.TestModels;
 using NUnit.Framework;
+using System;
 using System.IO;
 
 /*
@@ -42,7 +43,9 @@ namespace Azure.Core.Pole.Tests
             // read from stream
             {
                 stream.Position = 0;
-                HelloModel hello = HelloModel.Deserialize(stream); // this does not actually "deserialize". it just stores an heap address in the Hello struct 
+                var data = BinaryData.FromStream(stream);
+
+                var hello = new HelloModel(data); 
                 
                 Assert.IsTrue(hello.IsEnabled); // this just dereferences a bool stored in the heap
                 Assert.AreEqual(5, hello.RepeatCount); // same but with an int

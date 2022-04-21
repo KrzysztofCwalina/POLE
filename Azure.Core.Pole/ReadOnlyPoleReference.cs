@@ -26,6 +26,10 @@ namespace Azure.Core.Pole
         public ulong ReadTypeId()
             => BinaryPrimitives.ReadUInt64LittleEndian(_memory.Span.Slice(_address));
 
+        public int ReadInt32(int offset) => BinaryPrimitives.ReadInt32LittleEndian(_memory.Span.Slice(_address + offset));
+
+        public bool ReadBoolean(int offset) => _memory.Span[_address + offset] != 0;
+
         public string ReadString(int offset)
         {
             var span = _memory.Span;
