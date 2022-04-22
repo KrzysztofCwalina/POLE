@@ -63,9 +63,9 @@ namespace Azure.Core.Pole
         public Utf8 ReadUtf8(int offset) => new Utf8(ReadReference(offset));
         public void WriteUtf8(int offset, Utf8 value) => WriteObject<Utf8>(offset, value);
         
-        public void WriteByteBuffer(int offset, ReadOnlySpan<byte> value)
+        public void WriteByteBuffer(int offset, ReadOnlySpan<byte> value, ulong typeId)
         {
-            var reference = _heap.AllocateByteBuffer(value.Length);
+            var reference = _heap.AllocateByteBuffer(value.Length, typeId);
             Span<byte> bytes = reference._heap.GetBytes(reference.DataAddress);
             var length = BinaryPrimitives.ReadInt32LittleEndian(bytes);
             var destination = bytes.Slice(4, length);
@@ -100,6 +100,7 @@ namespace Azure.Core.Pole
                 case PoleType.Int32Id: return "Int32";
                 case PoleType.ByteBufferId: return "byte[]";
                 case PoleType.ArrayId: return "object[]";
+                case PoleType.Utf8BufferId: return "Utf8";
                 default: return typeId.ToString();
             }
         }

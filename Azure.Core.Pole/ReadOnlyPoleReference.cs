@@ -71,6 +71,7 @@ namespace Azure.Core.Pole
                 case PoleType.Int32Id: return "Int32";
                 case PoleType.ByteBufferId: return "byte[]";
                 case PoleType.ArrayId: return "object[]";
+                case PoleType.Utf8BufferId: return "Utf8";
                 default: return typeId.ToString();
             }
         }

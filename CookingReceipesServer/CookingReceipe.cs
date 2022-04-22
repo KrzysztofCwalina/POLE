@@ -27,17 +27,17 @@ namespace CookingReceipesServer
         public ReadOnlySpan<byte> Title
         {
             get => _reference.ReadByteBuffer(Schema.TitleOffset);
-            set => _reference.WriteByteBuffer(Schema.TitleOffset, value);
+            set => _reference.WriteByteBuffer(Schema.TitleOffset, value, PoleType.Utf8BufferId);
         }
         public ReadOnlySpan<byte> Ingredients
         {
             get => _reference.ReadByteBuffer(Schema.IngredientsOffset);
-            set => _reference.WriteByteBuffer(Schema.IngredientsOffset, value);
+            set => _reference.WriteByteBuffer(Schema.IngredientsOffset, value, PoleType.Utf8BufferId);
         }
         public ReadOnlySpan<byte> Directions
         {
             get => _reference.ReadByteBuffer(Schema.DirectionsOffset);
-            set => _reference.WriteByteBuffer(Schema.DirectionsOffset, value);
+            set => _reference.WriteByteBuffer(Schema.DirectionsOffset, value, PoleType.Utf8BufferId);
         }
         public int Id
         {

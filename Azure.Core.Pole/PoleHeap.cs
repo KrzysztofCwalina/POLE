@@ -18,7 +18,7 @@ namespace Azure.Core.Pole
             reference.WriteTypeId(typeId);
             return reference;
         }
-        public PoleReference AllocateByteBuffer(int length) // TODO: should byte buffer be an object, i.e. have type ID?
+        public PoleReference AllocateByteBuffer(int length, ulong typeId) // TODO: should byte buffer be an object, i.e. have type ID?
         {
             var reference = AllocateCore(length + 4 + sizeof(ulong));
             reference.WriteTypeId(PoleType.ByteBufferId);

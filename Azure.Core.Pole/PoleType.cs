@@ -10,9 +10,10 @@ namespace Azure.Core.Pole
     {
         public const ulong SchemaIdMask = 0xFFFFFFFFFFFFFF00;
 
-        public const ulong ArrayId = 0x0000000000000100;
+        public const ulong Int32Id      = 0x0000000000000100;
+        public const ulong ArrayId      = 0x0000000000000200;
         public const ulong ByteBufferId = 0x0000000000000300;
-        public const ulong Int32Id = 0x0000000000000200; 
+        public const ulong Utf8BufferId = 0x0000000000000400;
 
         public static bool TryGetSize(Type type, out int size)
         {
