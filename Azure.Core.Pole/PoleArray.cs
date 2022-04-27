@@ -14,17 +14,16 @@ namespace Azure.Core.Pole
         const int LengthOffset = 0;
         const int ItemSizeOffset = 4;
         const int ItemsOffset = 8;
-        const int SizeHeader = 12;
 
-        readonly PoleReference _reference;
+        readonly Reference _reference;
 
-        public PoleArray(PoleReference reference)
+        public PoleArray(Reference reference)
         {
             var typeId = reference.ReadTypeId();
             if ((typeId & PoleType.SchemaIdMask) != ArrayId) throw new InvalidCastException("invalid cast");
             _reference = reference;
         }
-        public PoleReference Reference => _reference;
+        public Reference Reference => _reference;
 
         public PoleArray(PoleHeap heap, int length)
         {
@@ -33,7 +32,7 @@ namespace Azure.Core.Pole
                 throw new InvalidOperationException($"{typeof(T)} is not a POLE type.");
             }
 
-            int size = SizeHeader + length * itemSize;
+            int size = ItemsOffset + length * itemSize;
             _reference = heap.AllocateObject(size, ArrayId);
             _reference.WriteInt32(LengthOffset, length);
             _reference.WriteInt32(ItemSizeOffset, itemSize);
@@ -54,6 +53,11 @@ namespace Azure.Core.Pole
                     IObject iobj = value as IObject;
                     var address = iobj.Address;
                     _reference.WriteInt32(itemOffset, address);
+                }
+                else if (typeof(Utf8) == typeof(T))
+                {
+                    var utf8 = (Utf8)(object)value;
+                    _reference.WriteInt32(itemOffset, utf8.Address);
                 }
                 else
                 {
@@ -81,12 +85,12 @@ namespace Azure.Core.Pole
                 else if (typeof(IObject).IsAssignableFrom(typeof(T)))
                 {
                     int itemAddress = _reference.ReadInt32(itemOffset);
-                    var reference = new PoleReference(_reference.Heap, _reference.Address + itemAddress);
+                    var reference = new Reference(_reference.Heap, _reference.Address + itemAddress);
                     return (T)reference.Deserialize(typeof(T));
                 }
                 else
                 {
-                    return PoleType.Deserialize<T>(new PoleReference(_reference.Heap, _reference.Address + itemOffset));
+                    return PoleType.Deserialize<T>(new Reference(_reference.Heap, _reference.Address + itemOffset));
                 }
             }
         }

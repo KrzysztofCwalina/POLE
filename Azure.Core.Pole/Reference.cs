@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.Reflection;
 
 namespace Azure.Core.Pole
 {
-    public readonly struct PoleReference : IObject
+    public readonly struct Reference : IObject
     {
         public const int TypeIdOffset = 0;
         public const int ObjectDataOffset = 8;
@@ -15,7 +16,7 @@ namespace Azure.Core.Pole
         readonly int _dataAddress;
         readonly PoleHeap _heap;
 
-        public PoleReference(PoleHeap heap, int address) 
+        public Reference(PoleHeap heap, int address) 
         {
             _heap = heap;
             _dataAddress = address + ObjectDataOffset;
@@ -42,14 +43,14 @@ namespace Azure.Core.Pole
         public ulong ReadTypeId() => BinaryPrimitives.ReadUInt64LittleEndian(_heap.GetBytes(Address));
         public void WriteTypeId(ulong typeId) => BinaryPrimitives.WriteUInt64LittleEndian(_heap.GetBytes(Address), typeId);
 
-        public PoleReference ReadReference(int offset) => new PoleReference(_heap, ReadInt32(offset));
-        public void WriteReference(int offset, PoleReference reference)
+        public Reference ReadReference(int offset) => new Reference(_heap, ReadInt32(offset));
+        public void WriteReference(int offset, Reference reference)
             => WriteAddress(offset, reference.Address, reference._heap);
 
 
         public void WriteAddress(int offset, int address, PoleHeap heap = null)
         {
-            PoleReference existing = ReadReference(offset);
+            Reference existing = ReadReference(offset);
             if (!existing.IsNull) throw new InvalidOperationException("model property can be assigned only once");
             if (heap != null && !ReferenceEquals(this._heap, heap)) throw new InvalidOperationException("Cross-heap references are not supported");
             WriteInt32(offset, address);
@@ -60,34 +61,40 @@ namespace Azure.Core.Pole
         public void WriteString(int offset, string value) => WriteUtf8(offset, new Utf8(_heap, value));
         public string ReadString(int offset) => ReadUtf8(offset).ToString();
 
-        public Utf8 ReadUtf8(int offset) => new Utf8(ReadReference(offset));
-        public void WriteUtf8(int offset, Utf8 value) => WriteObject<Utf8>(offset, value);
-        
-        public void WriteByteBuffer(int offset, ReadOnlySpan<byte> value, ulong typeId)
+        public Utf8 ReadUtf8(int offset)
         {
-            var reference = _heap.AllocateByteBuffer(value.Length, typeId);
-            Span<byte> bytes = reference._heap.GetBytes(reference.DataAddress);
-            var length = BinaryPrimitives.ReadInt32LittleEndian(bytes);
-            var destination = bytes.Slice(4, length);
-            value.CopyTo(destination);
-            this.WriteReference(offset, reference);
+            var (buffer, address) = ReadByteBuffer(offset);
+            return new Utf8(buffer, address);
         }
-        public ReadOnlySpan<byte> ReadByteBuffer(int offset)
+        public void WriteUtf8(int offset, Utf8 value) => WriteAddress(offset, value.Address);
+        
+        public void WriteByteBuffer(int offset, ReadOnlySpan<byte> value)
         {
-            var len = BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(DataAddress + offset));
-            return _heap.GetBytes(DataAddress + sizeof(int), len);
+            ByteBuffer buffer = _heap.AllocateBuffer(value.Length);
+            buffer.WriteBytes(value);
+            this.WriteAddress(offset, buffer.Address);
+        }
+        public (ReadOnlySequence<byte> bytes, int address) ReadByteBuffer(int offset)
+        {
+            var address = ReadInt32(offset);
+
+            var len = BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(address));
+
+            var sequence = _heap.GetByteSequence(address + sizeof(int), len);
+
+            return (sequence, address);
         }
 
         // TODO: can reflection be eliminated?
         public T Deserialize<T>()
         {
-            var ctor = typeof(T).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new Type[] { typeof(PoleReference) }, Array.Empty<ParameterModifier>());
+            var ctor = typeof(T).GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new Type[] { typeof(Reference) }, Array.Empty<ParameterModifier>());
             var value = (T)ctor.Invoke(new object[] { this });
             return value;
         }
         public object Deserialize(Type type)
         {
-            var ctor = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new Type[] { typeof(PoleReference) }, Array.Empty<ParameterModifier>());
+            var ctor = type.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public, null, new Type[] { typeof(Reference) }, Array.Empty<ParameterModifier>());
             var value = ctor.Invoke(new object[] { this });
             return value;
         }
@@ -98,9 +105,7 @@ namespace Azure.Core.Pole
             switch (typeId)
             {
                 case PoleType.Int32Id: return "Int32";
-                case PoleType.ByteBufferId: return "byte[]";
                 case PoleType.ArrayId: return "object[]";
-                case PoleType.Utf8BufferId: return "Utf8";
                 default: return typeId.ToString();
             }
         }

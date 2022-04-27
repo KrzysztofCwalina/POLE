@@ -68,6 +68,26 @@ namespace Azure.Core.Pole.Tests
         }
 
         [Test]
+        public void StringArrayBasics()
+        {
+            var stream = new MemoryStream();
+            {
+                using ArrayPoolHeap heap = new();
+                var utf8Strings = new PoleArray<Utf8>(heap, 1);
+                utf8Strings[0] = new Utf8(heap, "ABC");
+
+                heap.WriteTo(stream);
+                stream.Position = 0;
+            }
+            {
+                using ArrayPoolHeap heap = ArrayPoolHeap.ReadFrom(stream);
+                var strings = new PoleArray<string>(heap.GetRoot());
+                var s1 = strings[0];
+                Assert.AreEqual("ABC", s1);
+            }
+        }
+
+        [Test]
         public void StructArray()
         {
             var stream = new MemoryStream();
@@ -98,9 +118,9 @@ namespace Azure.Core.Pole.Tests
             public const int BOffset = 4;
             const int Size = 8;
 
-            readonly PoleReference _reference;
+            readonly Reference _reference;
 
-            private ServerStructModel(PoleReference reference) => _reference = reference;
+            private ServerStructModel(Reference reference) => _reference = reference;
 
             public void Set(int a, int b) {
                 _reference.WriteInt32(AOffset, a);

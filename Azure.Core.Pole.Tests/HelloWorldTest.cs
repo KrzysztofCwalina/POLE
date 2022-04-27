@@ -41,7 +41,7 @@ namespace Azure.Core.Pole.Tests
                 void SetIsEnabled(TestModels.Server.HelloModel hello, bool value) => hello.IsEnabled = value;
             } // heap buffers are returned to the buffer pool here
 
-            Assert.AreEqual(45, stream.Length);
+            Assert.AreEqual(37, stream.Length);
 
             // read from stream
             {

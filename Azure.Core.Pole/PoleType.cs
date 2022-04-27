@@ -12,8 +12,6 @@ namespace Azure.Core.Pole
 
         public const ulong Int32Id      = 0x0000000000000100;
         public const ulong ArrayId      = 0x0000000000000200;
-        public const ulong ByteBufferId = 0x0000000000000300;
-        public const ulong Utf8BufferId = 0x0000000000000400;
 
         public static bool TryGetSize(Type type, out int size)
         {
@@ -35,13 +33,13 @@ namespace Azure.Core.Pole
             return true;
         }
  
-        public static T Deserialize<T>(PoleReference reference)
+        public static T Deserialize<T>(Reference reference)
         {
             var type = typeof(T);
             var ctor = type.GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, s_ctorParams, null);
             if (ctor == null) throw new InvalidOperationException($"{typeof(T)} is not a POLE type.");
             return (T)ctor.Invoke(new object[] { reference });
         }
-        static readonly Type[] s_ctorParams = new Type[] { typeof(PoleReference) };
+        static readonly Type[] s_ctorParams = new Type[] { typeof(Reference) };
     }
 }

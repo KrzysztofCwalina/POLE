@@ -78,8 +78,8 @@ namespace Azure.Core.Pole.Tests
 
     public class ClientModel
     {
-        private readonly PoleReference _reference;
-        private ClientModel(PoleReference reference) => _reference = reference;
+        private readonly Reference _reference;
+        private ClientModel(Reference reference) => _reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         internal static ClientModel Deserialize(ArrayPoolHeap heap)
@@ -108,9 +108,9 @@ namespace Azure.Core.Pole.Tests
 
     public class ServerModel
     {
-        private readonly PoleReference _reference;
+        private readonly Reference _reference;
 
-        private ServerModel(PoleReference reference) => _reference = reference;
+        private ServerModel(Reference reference) => _reference = reference;
 
         public ServerModel(ArrayPoolHeap heap, ushort version)
         {

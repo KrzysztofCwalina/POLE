@@ -19,25 +19,25 @@ namespace CookingReceipesServer
             public const int Size = 16;
         }
 
-        private readonly PoleReference _reference;
+        private readonly Reference _reference;
 
         public CookingReceipe(PoleHeap heap)
             => _reference = heap.AllocateObject(Schema.Size, Schema.SchemaId); 
 
         public ReadOnlySpan<byte> Title
         {
-            get => _reference.ReadByteBuffer(Schema.TitleOffset);
-            set => _reference.WriteByteBuffer(Schema.TitleOffset, value, PoleType.Utf8BufferId);
+            get => _reference.ReadByteBuffer(Schema.TitleOffset).bytes.FirstSpan;
+            set => _reference.WriteByteBuffer(Schema.TitleOffset, value);
         }
         public ReadOnlySpan<byte> Ingredients
         {
-            get => _reference.ReadByteBuffer(Schema.IngredientsOffset);
-            set => _reference.WriteByteBuffer(Schema.IngredientsOffset, value, PoleType.Utf8BufferId);
+            get => _reference.ReadByteBuffer(Schema.IngredientsOffset).bytes.FirstSpan;
+            set => _reference.WriteByteBuffer(Schema.IngredientsOffset, value);
         }
         public ReadOnlySpan<byte> Directions
         {
-            get => _reference.ReadByteBuffer(Schema.DirectionsOffset);
-            set => _reference.WriteByteBuffer(Schema.DirectionsOffset, value, PoleType.Utf8BufferId);
+            get => _reference.ReadByteBuffer(Schema.DirectionsOffset).bytes.FirstSpan;
+            set => _reference.WriteByteBuffer(Schema.DirectionsOffset, value);
         }
         public int Id
         {
@@ -57,7 +57,7 @@ namespace CookingReceipesServer
             public const int Size = 12;
         }
 
-        private readonly ReadOnlyPoleReference _reference;
+        private readonly ReadOnlyReference _reference;
 
         internal static async Task<CookingReceipeSubmission> ReadAsync(PipeReader reader)
         {
@@ -72,7 +72,7 @@ namespace CookingReceipesServer
             return new CookingReceipeSubmission(data);
         }
         private CookingReceipeSubmission(BinaryData poleData)
-            =>_reference = new ReadOnlyPoleReference(poleData, Schema.SchemaId);  
+            =>_reference = new ReadOnlyReference(poleData, Schema.SchemaId);  
 
         public Utf8 Title => _reference.ReadUtf8(Schema.TitleOffset);
         public Utf8 Ingredients => _reference.ReadUtf8(Schema.IngredientsOffset);

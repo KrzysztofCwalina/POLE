@@ -2,59 +2,68 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.ComponentModel;
 using System.Text;
 
 namespace Azure.Core.Pole
 {
-    public readonly struct Utf8 : IObject
+    public readonly struct ByteBuffer
     {
-        readonly PoleReference _reference;
-        readonly ReadOnlyPoleReference _roreference; // TODO: the fact that we have both references is a massive hack
-        readonly bool _isRo;
+        readonly Memory<byte> _bytes;
+        readonly int _address;
 
-        int IObject.Address => _reference.Address;
+        public ReadOnlySequence<byte> GetBytes() => new ReadOnlySequence<byte>(_bytes);
 
-        public Utf8(ReadOnlyPoleReference reference)
+        public ByteBuffer(Memory<byte> bytes, int address)
         {
-            _roreference = reference;
-            _reference = default;
-            _isRo = true;
+            _bytes = bytes;
+            _address = address; 
         }
 
-        public Utf8(PoleReference reference)
+        public void WriteString(string str)
         {
-            _reference = reference;
-            _roreference = default;
-            _isRo = false;
+            Span<byte> buffer = _bytes.Span.Slice(sizeof(int));
+            if (!str.TryEncodeToUtf8(buffer, out var written))
+            {
+                throw new NotImplementedException();
+            }
+        }
+        public void WriteBytes(ReadOnlySpan<byte> bytes)
+        {
+            Span<byte> buffer = _bytes.Span.Slice(sizeof(int));
+            bytes.CopyTo(buffer);
+        }
+
+        public int Address => _address;
+    }
+    public readonly struct Utf8 
+    {
+        readonly ReadOnlySequence<byte> _bytes;
+        readonly int _address;
+
+        public Utf8(ReadOnlySequence<byte> bytes, int address)
+        {
+            _bytes = bytes;
+            _address = address;
         } 
 
         public Utf8(PoleHeap heap, string str)
         {
             var strLength = Encoding.UTF8.GetByteCount(str);
-            _reference = heap.AllocateByteBuffer(strLength, PoleType.Utf8BufferId);
-            Span<byte> buffer = heap.GetBytes(_reference.DataAddress + 4, strLength);
-            if (!str.TryEncodeToUtf8(buffer, out var written))
-            {
-                throw new NotImplementedException("this should never happen");
-            }
-            _roreference = default;
-            _isRo = false;
+            ByteBuffer buffer = heap.AllocateBuffer(strLength);
+            _address = buffer.Address;
+            buffer.WriteString(str);
+            _bytes = buffer.GetBytes();
         }
+
+        public int Address => _address;
 
         public override string ToString()
         {
-            if (!_isRo)
-            {
-                var bytes = _reference.ReadByteBuffer(0);
-                return bytes.ToStringAsciiNoAlloc();
-            }
-            else
-            {
-                var bytes = _roreference.ReadByteBuffer(0);
-                return bytes.ToStringAsciiNoAlloc();
-            }
+            ReadOnlySpan<byte> b = _bytes.ToArray().AsSpan();
+            return b.ToStringAsciiNoAlloc();
         }
     }
 }

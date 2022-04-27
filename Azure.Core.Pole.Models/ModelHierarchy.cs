@@ -17,11 +17,11 @@ namespace Azure.Core.Pole.TestModels
         const int BagOffset = BazOffset + sizeof(int);  // object
         const int Size = BagOffset + sizeof(int);
 
-        readonly PoleReference _reference;
+        readonly Reference _reference;
 
         int IObject.Address => _reference.Address; 
 
-        private ParentModel(PoleReference reference) => _reference = reference;
+        private ParentModel(Reference reference) => _reference = reference;
 
         public static ParentModel Allocate(ArrayPoolHeap heap) => new (heap.AllocateObject(Size, SchemaId));
         public static ParentModel Deserialize(ArrayPoolHeap heap) => new (heap.GetRoot());
@@ -57,9 +57,9 @@ namespace Azure.Core.Pole.TestModels
         const int BatOffset = 0; // bool
         const int Size = sizeof(byte);
 
-        readonly PoleReference _reference;
+        readonly Reference _reference;
         int IObject.Address => _reference.Address;
-        internal ChildModel(PoleReference reference) => _reference = reference;
+        internal ChildModel(Reference reference) => _reference = reference;
 
         public static ChildModel Allocate(ArrayPoolHeap heap) => new(heap.AllocateObject(Size, SchemaId));
 

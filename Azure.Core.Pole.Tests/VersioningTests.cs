@@ -76,8 +76,8 @@ namespace Azure.Core.Pole.Tests
 
     public class ClientV0Model
     {
-        private readonly PoleReference _reference;
-        private ClientV0Model(PoleReference reference) => _reference = reference;
+        private readonly Reference _reference;
+        private ClientV0Model(Reference reference) => _reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static ClientV0Model Deserialize(ArrayPoolHeap heap)
@@ -99,8 +99,8 @@ namespace Azure.Core.Pole.Tests
 
     public class ClientV1Model
     {
-        private readonly PoleReference _reference;
-        private ClientV1Model(PoleReference reference) => _reference = reference;
+        private readonly Reference _reference;
+        private ClientV1Model(Reference reference) => _reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static ClientV1Model Deserialize(ArrayPoolHeap heap)
@@ -131,15 +131,15 @@ namespace Azure.Core.Pole.Tests
 
     public class ServerVersionedModel
     {
-        private readonly PoleReference _reference;
+        private readonly Reference _reference;
 
-        private ServerVersionedModel(PoleReference reference) => _reference = reference;
+        private ServerVersionedModel(Reference reference) => _reference = reference;
 
         public static ServerVersionedModel Allocate(ArrayPoolHeap heap, byte version)
         { 
             int size = ModelSchema.GetSize(version);
             ulong typeId = ModelSchema.GetTypeId(version);
-            PoleReference reference = heap.AllocateObject(size, typeId);
+            Reference reference = heap.AllocateObject(size, typeId);
             return new ServerVersionedModel(reference);
         }
 

@@ -20,11 +20,11 @@ namespace Azure.Core.Pole.TestModels
 
     public class ModelWithArray
     {
-        private readonly PoleReference _reference;
+        private readonly Reference _reference;
         private PoleArray<int> _integers;
         private PoleArray<string> _strings;
 
-        private ModelWithArray(PoleReference reference) => _reference = reference;
+        private ModelWithArray(Reference reference) => _reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static ModelWithArray Deserialize(ArrayPoolHeap heap)
@@ -66,11 +66,11 @@ namespace Azure.Core.Pole.TestModels.Server
 {
     public class ModelWithArray
     {
-        private readonly PoleReference _reference;
+        private readonly Reference _reference;
         private PoleArray<int> _integers;
         private PoleArray<Utf8> _strings;
 
-        private ModelWithArray(PoleReference reference)
+        private ModelWithArray(Reference reference)
         {
             _reference = reference;
             _integers = null;

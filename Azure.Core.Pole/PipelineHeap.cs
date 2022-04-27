@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.IO.Pipelines;
 
@@ -20,12 +21,24 @@ namespace Azure.Core.Pole
             _written = RootOffset;
         }
 
-        protected override PoleReference AllocateCore(int size)
+        public override Reference AllocateObject(int size, ulong typeId)
         {
-            var reference = new PoleReference(this, _written);
-            _buffer.Slice(_written, size).Span.Fill(0);
-            _written += size;
-            return reference;
+            var address = _written;
+            _written += size + sizeof(ulong);
+            var slice = _buffer.Span.Slice(address, size + sizeof(ulong));
+            slice.Fill(0);
+            BinaryPrimitives.WriteUInt64LittleEndian(slice, typeId);
+            return new Reference(this, address);
+        }
+
+        public override ByteBuffer AllocateBuffer(int length)
+        {
+            var address = _written;
+            var totalLength = length + sizeof(int);
+            _written += totalLength;
+            var slice = _buffer.Slice(address, length + sizeof(int));
+            BinaryPrimitives.WriteInt32LittleEndian(slice.Span, length);
+            return new ByteBuffer(slice, address);
         }
 
         public override Span<byte> GetBytes(int address, int length = -1)
@@ -50,6 +63,11 @@ namespace Azure.Core.Pole
         {
             length = _written;
             return true;
+        }
+
+        public override ReadOnlySequence<byte> GetByteSequence(int address, int length)
+        {
+            return new ReadOnlySequence<byte>(_buffer.Slice(address, length));
         }
     }
 }

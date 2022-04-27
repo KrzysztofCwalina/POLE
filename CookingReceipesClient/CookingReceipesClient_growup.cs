@@ -36,7 +36,7 @@ namespace Azure.Cooking.Receipes
 
             if (response.IsError) throw new RequestFailedException(response);
 
-            var reference = new ReadOnlyPoleReference(response.Content, PoleType.Int32Id);
+            var reference = new ReadOnlyReference(response.Content, PoleType.Int32Id);
             int id = reference.ReadInt32(offset: 0);
 
             return Response.FromValue(id, response);
@@ -55,10 +55,10 @@ namespace Azure.Cooking.Receipes
             public const int Size = 16;
         }
 
-        private readonly ReadOnlyPoleReference _reference;
+        private readonly ReadOnlyReference _reference;
 
         internal CookingReceipe(BinaryData poleData)
-            => _reference = new ReadOnlyPoleReference(poleData, Schema.SchemaId);
+            => _reference = new ReadOnlyReference(poleData, Schema.SchemaId);
 
         public string Title => _reference.ReadString(Schema.TitleOffset);
 

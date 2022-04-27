@@ -20,11 +20,11 @@ namespace Azure.Core.Pole.TestModels
 
     public struct HelloModel
     {
-        private readonly ReadOnlyPoleReference _reference;
-        private HelloModel(ReadOnlyPoleReference reference) => _reference = reference;
+        private readonly ReadOnlyReference _reference;
+        private HelloModel(ReadOnlyReference reference) => _reference = reference;
 
         public HelloModel(BinaryData poleData)
-            => _reference = new ReadOnlyPoleReference(poleData, HelloModelSchema.SchemaId);
+            => _reference = new ReadOnlyReference(poleData, HelloModelSchema.SchemaId);
 
         public int RepeatCount => _reference.ReadInt32(HelloModelSchema.RepeatCountOffset);
 
@@ -38,8 +38,8 @@ namespace Azure.Core.Pole.TestModels.Server
 {
     public struct HelloModel
     {
-        private readonly PoleReference _reference;
-        private HelloModel(PoleReference reference) => _reference = reference;
+        private readonly Reference _reference;
+        private HelloModel(Reference reference) => _reference = reference;
 
         public HelloModel(PoleHeap heap)
         {

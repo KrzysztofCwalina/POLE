@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 
 namespace Azure.Core.Pole
 {
-    public readonly struct ReadOnlyPoleReference
+    public readonly struct ReadOnlyReference
     {
         public const int TypeIdOffset = 0;
         public const int ObjectDataOffset = 8;
@@ -14,7 +15,7 @@ namespace Azure.Core.Pole
         readonly int _dataAddress;
         readonly ReadOnlyMemory<byte> _memory;
 
-        public ReadOnlyPoleReference(BinaryData poleData, ulong expectedSchemaId)
+        public ReadOnlyReference(BinaryData poleData, ulong expectedSchemaId)
         {
             _memory = poleData.ToMemory();
             _dataAddress = PoleHeap.RootOffset + ObjectDataOffset;
@@ -23,7 +24,7 @@ namespace Azure.Core.Pole
             if ((typeId & PoleType.SchemaIdMask) != expectedSchemaId) throw new InvalidCastException("invalid cast");
         }
 
-        public ReadOnlyPoleReference(ReadOnlyMemory<byte> memory, int objectAddress)
+        public ReadOnlyReference(ReadOnlyMemory<byte> memory, int objectAddress)
         {
             _memory = memory;
             _dataAddress = objectAddress + ObjectDataOffset;
@@ -44,8 +45,8 @@ namespace Azure.Core.Pole
         {
             var span = _memory.Span;
             int stringAddress = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(DataAddress + offset));
-            int stringLength = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(stringAddress + ObjectDataOffset, sizeof(int)));
-            ReadOnlySpan<byte> stringBytes = span.Slice(stringAddress + ObjectDataOffset + sizeof(int), stringLength);
+            int stringLength = BinaryPrimitives.ReadInt32LittleEndian(span.Slice(stringAddress));
+            ReadOnlySpan<byte> stringBytes = span.Slice(stringAddress + sizeof(int), stringLength);
             return stringBytes.ToStringAsciiNoAlloc();
         }
 
@@ -58,20 +59,19 @@ namespace Azure.Core.Pole
 
         public Utf8 ReadUtf8(int offset)
         {
-            var reference = ReadReference(offset);
-            return new Utf8(reference);
+            var (buffer, address) = ReadBuffer(offset);
+            return new Utf8(buffer, address);
         }
-        public ReadOnlyPoleReference ReadReference(int offset) => new ReadOnlyPoleReference(_memory, ReadInt32(offset));
+        public ReadOnlyReference ReadReference(int offset) => new ReadOnlyReference(_memory, ReadInt32(offset));
 
+        public (ReadOnlySequence<byte> bytes, int address) ReadBuffer(int offset) => throw new NotImplementedException();
         public override string ToString()
         {
             var typeId = ReadTypeId();
             switch (typeId)
             {
                 case PoleType.Int32Id: return "Int32";
-                case PoleType.ByteBufferId: return "byte[]";
                 case PoleType.ArrayId: return "object[]";
-                case PoleType.Utf8BufferId: return "Utf8";
                 default: return typeId.ToString();
             }
         }

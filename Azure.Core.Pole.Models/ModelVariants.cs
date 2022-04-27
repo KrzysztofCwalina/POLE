@@ -43,8 +43,8 @@ namespace Azure.Core.Pole.TestModels
     // used by the client to parse server responses, aka output model
     public readonly struct ClientOutputModel
     {
-        private readonly PoleReference _reference;
-        private ClientOutputModel(PoleReference reference) => _reference = reference;
+        private readonly Reference _reference;
+        private ClientOutputModel(Reference reference) => _reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static ClientOutputModel Deserialize(ArrayPoolHeap heap)
@@ -70,9 +70,9 @@ namespace Azure.Core.Pole.TestModels
     // TODO: this should support "patch"
     public class ClientRountripingModel 
     {
-        private readonly PoleReference __reference;
+        private readonly Reference __reference;
         private string _message; // mutable variable size fields need to be on the GC heap
-        private ClientRountripingModel(PoleReference reference) => __reference = reference;
+        private ClientRountripingModel(Reference reference) => __reference = reference;
 
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static ClientRountripingModel Deserialize(ArrayPoolHeap heap)
@@ -133,8 +133,8 @@ namespace Azure.Core.Pole.TestModels
     // used by the server to parse client requests
     public readonly struct ServerRequestModel
     {
-        private readonly PoleReference _reference;
-        private ServerRequestModel(PoleReference reference) => _reference = reference;
+        private readonly Reference _reference;
+        private ServerRequestModel(Reference reference) => _reference = reference;
 
         public static ServerRequestModel Deserialize(ArrayPoolHeap heap)
         {
@@ -158,12 +158,12 @@ namespace Azure.Core.Pole.TestModels
     // used on the server to compose responses
     public readonly struct ServerResponseModel
     {
-        private readonly PoleReference _reference;
-        private ServerResponseModel(PoleReference reference) => _reference = reference;
+        private readonly Reference _reference;
+        private ServerResponseModel(Reference reference) => _reference = reference;
 
         public static ServerResponseModel Allocate(ArrayPoolHeap heap)
         {
-            PoleReference reference = heap.AllocateObject(ModelSchema.Size, ModelSchema.SchemaId);
+            Reference reference = heap.AllocateObject(ModelSchema.Size, ModelSchema.SchemaId);
             return new ServerResponseModel(reference);
         }
 
