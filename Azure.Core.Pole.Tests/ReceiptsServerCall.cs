@@ -9,8 +9,8 @@ namespace Azure.Core.Pole.Tests
     public partial class UnitTests
     {
         [Test]
-        //[Ignore("live test")]
-        public void GetReceipe()
+        [Ignore("live test")]
+        public void _LiveGetReceipe()
         {
             var client = new CookingReceipesClient();
             CookingReceipe receipe = client.GetReceipe(303);
@@ -20,8 +20,8 @@ namespace Azure.Core.Pole.Tests
         }
 
         [Test]
-        //[Ignore("live test")]
-        public void AddReceipe()
+        [Ignore("live test")]
+        public void _LiveAddReceipe()
         {
             var client = new CookingReceipesClient();
 
