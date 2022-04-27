@@ -31,14 +31,14 @@ namespace Azure.Core.Pole
             return new Reference(this, address);
         }
 
-        public override ByteBuffer AllocateBuffer(int length)
+        public override Sequence<byte> AllocateBuffer(int length)
         {
             var address = _written;
             var totalLength = length + sizeof(int);
             _written += totalLength;
             var slice = _buffer.Slice(address, length + sizeof(int));
             BinaryPrimitives.WriteInt32LittleEndian(slice.Span, length);
-            return new ByteBuffer(slice, address);
+            return new Sequence<byte>(slice, address);
         }
 
         public override Span<byte> GetBytes(int address, int length = -1)

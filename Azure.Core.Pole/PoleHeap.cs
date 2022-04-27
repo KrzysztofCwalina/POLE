@@ -12,7 +12,7 @@ namespace Azure.Core.Pole
         public const int RootOffset = 4; 
 
         public abstract Reference AllocateObject(int size, ulong typeId);
-        public abstract ByteBuffer AllocateBuffer(int size);
+        public abstract Sequence<byte> AllocateBuffer(int size);
 
         public abstract Span<byte> GetBytes(int address, int length = -1);
         public abstract ReadOnlySequence<byte> GetByteSequence(int address, int length);

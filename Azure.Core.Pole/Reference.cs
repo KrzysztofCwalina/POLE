@@ -70,7 +70,7 @@ namespace Azure.Core.Pole
         
         public void WriteByteBuffer(int offset, ReadOnlySpan<byte> value)
         {
-            ByteBuffer buffer = _heap.AllocateBuffer(value.Length);
+            Sequence<byte> buffer = _heap.AllocateBuffer(value.Length);
             buffer.WriteBytes(value);
             this.WriteAddress(offset, buffer.Address);
         }

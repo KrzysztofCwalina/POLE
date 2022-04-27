@@ -1,6 +1,6 @@
 Pri 0
-- Utf8 is a mess. the fact that we have reference being over a heap, and ROReference being over Memory<byte> is a problem. See Utf8 type.
-- Too much code relies on single buffer sequences.
+- PoleArray should be a buffer, not an object, i.e. it needs to be able to span multiple segments of memory
+- ByteBuffer should be a sequence of segments
 - simplify server parser for request data, i.e. reading from a pipeline
 - implement roundtrip (in-out and out-in) models for the client
 - remove all deserialize methods and add ctors that take BinaryData. But what about multi-buffer?
@@ -22,6 +22,7 @@ Pri 1
 - finish generator
 - support generating client + server
 - support other languages
+- too much code relies on single buffer sequences.
 
 Pri 2
 - support for converting from JSON
