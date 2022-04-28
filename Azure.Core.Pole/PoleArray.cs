@@ -85,12 +85,14 @@ namespace Azure.Core.Pole
                 else if (typeof(IObject).IsAssignableFrom(typeof(T)))
                 {
                     int itemAddress = _reference.ReadInt32(itemOffset);
-                    var reference = new Reference(_reference.Heap, _reference.Address + itemAddress);
+                    var reference = _reference.Heap.GetReference(itemAddress);
                     return (T)reference.Deserialize(typeof(T));
                 }
                 else
                 {
-                    return PoleType.Deserialize<T>(new Reference(_reference.Heap, _reference.Address + itemOffset));
+                    int itemAddress = itemOffset + _reference.Address;
+                    T value = PoleType.Deserialize<T>(_reference.Heap.GetReference(itemAddress));
+                    return value;
                 }
             }
         }

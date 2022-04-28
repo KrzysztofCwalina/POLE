@@ -18,17 +18,18 @@ namespace Azure.Core.Pole
         {
             _writer = writer;
             _buffer = _writer.GetMemory();
-            _written = RootOffset;
+            _written = RootAddress;
         }
 
         public override Reference AllocateObject(int size, ulong typeId)
         {
             var address = _written;
             _written += size + sizeof(ulong);
-            var slice = _buffer.Span.Slice(address, size + sizeof(ulong));
-            slice.Fill(0);
-            BinaryPrimitives.WriteUInt64LittleEndian(slice, typeId);
-            return new Reference(this, address);
+            var slice = _buffer.Slice(address, size + sizeof(ulong));
+            var span = slice.Span;
+            span.Fill(0);
+            BinaryPrimitives.WriteUInt64LittleEndian(span, typeId);
+            return new Reference(this, slice, address);
         }
 
         public override Sequence<byte> AllocateBuffer(int length)
@@ -69,5 +70,8 @@ namespace Azure.Core.Pole
         {
             return new ReadOnlySequence<byte>(_buffer.Slice(address, length));
         }
+
+        protected override Memory<byte> GetMemoryCore(int address)
+            => _buffer.Slice(address);
     }
 }

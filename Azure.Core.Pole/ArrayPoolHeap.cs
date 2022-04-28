@@ -23,16 +23,16 @@ namespace Azure.Core.Pole
             var bytes = ArrayPool<byte>.Shared.Rent(_segmentSize);
             Array.Clear(bytes, 0, bytes.Length);
             _buffer = bytes;
-            _written = RootOffset;
+            _written = RootAddress;
         }
 
         public override Reference AllocateObject(int size, ulong typeId)
         {
             var address = _written;
             _written += size + sizeof(ulong);
-            var slice = _buffer.Span.Slice(address, size + sizeof(ulong));
-            BinaryPrimitives.WriteUInt64LittleEndian(slice, typeId);
-            return new Reference(this, address);
+            var slice = _buffer.Slice(address, size + sizeof(ulong));
+            BinaryPrimitives.WriteUInt64LittleEndian(slice.Span, typeId);
+            return new Reference(this, slice, address);
         }
 
         public override Sequence<byte> AllocateBuffer(int length)
@@ -78,7 +78,7 @@ namespace Azure.Core.Pole
 
             var memory = ArrayPool<byte>.Shared.Rent(segmentSize);
             BinaryPrimitives.WriteInt32LittleEndian(memory, len);
-            int read = stream.Read(memory, RootOffset, memory.Length - RootOffset);
+            int read = stream.Read(memory, RootAddress, memory.Length - RootAddress);
             var heap = new ArrayPoolHeap()
             {
                 _buffer = memory,
@@ -123,8 +123,9 @@ namespace Azure.Core.Pole
         }
 
         public override ReadOnlySequence<byte> GetByteSequence(int address, int length)
-        {
-            return new ReadOnlySequence<byte>(_buffer.Slice(address, length));
-        }
+            => new ReadOnlySequence<byte>(_buffer.Slice(address, length));
+
+        protected override Memory<byte> GetMemoryCore(int address)
+            => _buffer.Slice(address);
     }
 }

@@ -1,4 +1,6 @@
 Pri 0
+- It's not possible to create a model that works both on server and client. The reason is that client model has RO references and server model has R/W reference.
+- Fix StructArray (test) scenario. The current test uses Set method. It needs to work with natural properties.
 - PoleArray should be a buffer, not an object, i.e. it needs to be able to span multiple segments of memory
 - ByteBuffer should be a sequence of segments
 - simplify server parser for request data, i.e. reading from a pipeline

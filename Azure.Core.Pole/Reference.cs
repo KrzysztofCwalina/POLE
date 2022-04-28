@@ -15,10 +15,12 @@ namespace Azure.Core.Pole
 
         readonly int _dataAddress;
         readonly PoleHeap _heap;
+        readonly Memory<byte> _objectMemory;
 
-        public Reference(PoleHeap heap, int address) 
+        public Reference(PoleHeap heap, Memory<byte> fields, int address) 
         {
             _heap = heap;
+            _objectMemory = fields;
             _dataAddress = address + ObjectDataOffset;
         }
 
@@ -26,27 +28,30 @@ namespace Azure.Core.Pole
         internal int DataAddress => _dataAddress;
 
         internal PoleHeap Heap => _heap;
-        
+
+        private Span<byte> At(int offset) => _objectMemory.Span.Slice(offset + Reference.ObjectDataOffset);
         public bool IsNull => _dataAddress == ObjectDataOffset;
 
-        public ushort ReadUInt16(int offset) => BinaryPrimitives.ReadUInt16LittleEndian(_heap.GetBytes(DataAddress + offset));
+        public ushort ReadUInt16(int offset) => BinaryPrimitives.ReadUInt16LittleEndian(At(offset));
 
-        public void WriteUInt16(int offset, ushort value) => BinaryPrimitives.WriteUInt16LittleEndian(_heap.GetBytes(DataAddress + offset), value);
-        public int ReadInt32(int offset) => BinaryPrimitives.ReadInt32LittleEndian(_heap.GetBytes(DataAddress + offset));
+        public void WriteUInt16(int offset, ushort value) => BinaryPrimitives.WriteUInt16LittleEndian(At(offset), value);
+        public int ReadInt32(int offset) => BinaryPrimitives.ReadInt32LittleEndian(At(offset));
 
-        public void WriteInt32(int offset, int value) => BinaryPrimitives.WriteInt32LittleEndian(_heap.GetBytes(DataAddress + offset), value);
-        public ulong ReadUInt64(int offset) => BinaryPrimitives.ReadUInt64LittleEndian(_heap.GetBytes(DataAddress + offset));
-        public void WriteUInt64(int offset, ulong value) => BinaryPrimitives.WriteUInt64LittleEndian(_heap.GetBytes(DataAddress + offset), value);
-        public bool ReadBoolean(int offset) => _heap[DataAddress + offset] != 0;
-        public void WriteBoolean(int offset, bool value) => _heap[DataAddress + offset] = value ? (byte)1 : (byte)0;
+        public void WriteInt32(int offset, int value) => BinaryPrimitives.WriteInt32LittleEndian(At(offset), value);
+        public ulong ReadUInt64(int offset) => BinaryPrimitives.ReadUInt64LittleEndian(At(offset));
+        public void WriteUInt64(int offset, ulong value) => BinaryPrimitives.WriteUInt64LittleEndian(At(offset), value);
+        public bool ReadBoolean(int offset) => At(offset)[0] != 0;
+        public void WriteBoolean(int offset, bool value) => At(offset)[0] = value ? (byte)1 : (byte)0;
 
-        public ulong ReadTypeId() => BinaryPrimitives.ReadUInt64LittleEndian(_heap.GetBytes(Address));
-        public void WriteTypeId(ulong typeId) => BinaryPrimitives.WriteUInt64LittleEndian(_heap.GetBytes(Address), typeId);
+        public ulong ReadTypeId() => BinaryPrimitives.ReadUInt64LittleEndian(_objectMemory.Span);
 
-        public Reference ReadReference(int offset) => new Reference(_heap, ReadInt32(offset));
+        public Reference ReadReference(int offset)
+        {
+            var address = ReadInt32(offset);
+            return _heap.GetReference(address);
+        } 
         public void WriteReference(int offset, Reference reference)
             => WriteAddress(offset, reference.Address, reference._heap);
-
 
         public void WriteAddress(int offset, int address, PoleHeap heap = null)
         {
