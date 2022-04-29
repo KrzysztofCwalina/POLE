@@ -13,24 +13,23 @@ namespace Azure.Core.Pole
         public const int TypeIdOffset = 0;
         public const int ObjectDataOffset = 8;
 
-        readonly int _dataAddress;
+        readonly int _address;
         readonly PoleHeap _heap;
         readonly Memory<byte> _objectMemory;
 
-        public Reference(PoleHeap heap, Memory<byte> fields, int address) 
+        public Reference(PoleHeap heap, Memory<byte> objectMemory, int address) 
         {
             _heap = heap;
-            _objectMemory = fields;
-            _dataAddress = address + ObjectDataOffset;
+            _objectMemory = objectMemory;
+            _address = address;
         }
 
-        public int Address => _dataAddress - ObjectDataOffset;
-        internal int DataAddress => _dataAddress;
+        public int Address => _address;
 
         internal PoleHeap Heap => _heap;
 
         private Span<byte> At(int offset) => _objectMemory.Span.Slice(offset + Reference.ObjectDataOffset);
-        public bool IsNull => _dataAddress == ObjectDataOffset;
+        public bool IsNull => _address == 0;
 
         public ushort ReadUInt16(int offset) => BinaryPrimitives.ReadUInt16LittleEndian(At(offset));
 

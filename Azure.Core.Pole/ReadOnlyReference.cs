@@ -32,7 +32,7 @@ namespace Azure.Core.Pole
 
         public bool IsNull => _dataAddress == ObjectDataOffset; // TODO: it's bad that default(PoleReference) is not null!!!
         internal int ObjectAddress => _dataAddress - ObjectDataOffset;
-        internal int DataAddress => _dataAddress;
+        internal int DataAddress => _dataAddress; // TODO: Reference does not need DataAddress, why does this one need it?
 
         private ulong ReadTypeId()
             => BinaryPrimitives.ReadUInt64LittleEndian(_memory.Span.Slice(ObjectAddress));
