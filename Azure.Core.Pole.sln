@@ -19,11 +19,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Azure.Core.Pole.Tooling", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Azure.Core.Tests.ModelDefinitions", "Azure.Core.Tests.ModelDefinitions\Azure.Core.Tests.ModelDefinitions.csproj", "{D99EDA9B-CCAE-4AC8-915A-0EA54A60D65E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CookingReceipesServer", "CookingReceipesServer\CookingReceipesServer.csproj", "{EB28369E-9E04-41C6-90CA-CFBD76E4B43E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CookingReceipesServer", "CookingReceipesServer\CookingReceipesServer.csproj", "{EB28369E-9E04-41C6-90CA-CFBD76E4B43E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CookingReceipesClient", "CookingReceipesClient\CookingReceipesClient.csproj", "{72D259F1-9E33-491A-82D1-E2D02BCA6EC4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CookingReceipesClient", "CookingReceipesClient\CookingReceipesClient.csproj", "{72D259F1-9E33-491A-82D1-E2D02BCA6EC4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CookingReceipesDefinitions", "CookingReceipesDefinitions\CookingReceipesDefinitions.csproj", "{9C004650-ED8C-48A8-A021-71E0620A722A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CookingReceipesDefinitions", "CookingReceipesDefinitions\CookingReceipesDefinitions.csproj", "{9C004650-ED8C-48A8-A021-71E0620A722A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pole", "pole\pole.csproj", "{A54B2E12-2BE4-48E5-B738-2B0B779E0E97}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -63,6 +65,10 @@ Global
 		{9C004650-ED8C-48A8-A021-71E0620A722A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9C004650-ED8C-48A8-A021-71E0620A722A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C004650-ED8C-48A8-A021-71E0620A722A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A54B2E12-2BE4-48E5-B738-2B0B779E0E97}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A54B2E12-2BE4-48E5-B738-2B0B779E0E97}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A54B2E12-2BE4-48E5-B738-2B0B779E0E97}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A54B2E12-2BE4-48E5-B738-2B0B779E0E97}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

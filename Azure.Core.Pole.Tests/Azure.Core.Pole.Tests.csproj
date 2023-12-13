@@ -23,4 +23,10 @@
     <ProjectReference Include="..\CookingReceipesDefinitions\CookingReceipesDefinitions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="tsp\simple.tsp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

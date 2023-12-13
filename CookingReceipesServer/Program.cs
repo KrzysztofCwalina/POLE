@@ -18,9 +18,9 @@ app.MapGet("/receipes/{id}", (int id, HttpContext context) =>
 
     CookingReceipe receipe = new CookingReceipe(heap);
     receipe.Id = 303;
-    receipe.Title = "Polish Pierogi";
-    receipe.Directions = "Mix ingredients, make pierogi, and cook in a pot of hot water.";
-    receipe.Ingredients = "Flour, water, salt, potatoes, white cheese, onion.";
+    receipe.Title = "Polish Pierogi"u8;
+    receipe.Directions = "Mix ingredients, make pierogi, and cook in a pot of hot water."u8;
+    receipe.Ingredients = "Flour, water, salt, potatoes, white cheese, onion."u8;
 
     context.Response.ContentLength = heap.TotalWritten;
     heap.Complete();
