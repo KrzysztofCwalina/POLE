@@ -9,6 +9,23 @@ namespace Azure.Core.Pole.Tooling
 {
     public class TypeSpecGenerator
     {
+        public static string Generate(string typeSpecContent)
+        {
+            try
+            {
+                // Parse the TypeSpec content to extract model information
+                TypeSpecParser parser = new TypeSpecParser();
+                ModelInfo modelInfo = parser.ParseModel(typeSpecContent);
+                
+                // Generate and return C# class code
+                return GenerateCSharpClass(modelInfo);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Error generating C# code from TypeSpec: {ex.Message}", ex);
+            }
+        }
+
         public static void Generate(string source, string destinationFolder)
         {
             try
@@ -21,12 +38,12 @@ namespace Azure.Core.Pole.Tooling
 
                 string typeSpecContent = File.ReadAllText(source);
                 
-                // Parse the TypeSpec content to extract model information
+                // Generate C# code using in-memory method
+                string csharpCode = Generate(typeSpecContent);
+                
+                // Parse to get model name for filename
                 TypeSpecParser parser = new TypeSpecParser();
                 ModelInfo modelInfo = parser.ParseModel(typeSpecContent);
-                
-                // Generate C# class code
-                string csharpCode = GenerateCSharpClass(modelInfo);
                 
                 // Ensure destination folder exists
                 Directory.CreateDirectory(destinationFolder);

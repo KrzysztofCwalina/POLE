@@ -17,20 +17,18 @@ namespace Azure.Core.Pole.Tests
         [Test]
         public void DogModelGeneration()
         {
-            // Test with Dog model format
-            string source = Path.Combine(".", "tsp", "dog.tsp");
-            string destination = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            TypeSpecGenerator.Generate(source, destination);
+            // Read the TypeSpec content directly
+            string typeSpecContent = @"model Dog {
+  name: string;
+  age: uint8;
+  isMale: boolean;
+}";
             
-            // Verify the generated file exists
-            string generatedFile = Path.Combine(destination, "Dog.cs");
-            Assert.IsTrue(File.Exists(generatedFile), "Generated C# file should exist");
-            
-            // Read and validate the generated C# code using Roslyn
-            string content = File.ReadAllText(generatedFile);
+            // Generate C# code in-memory
+            string generatedCode = TypeSpecGenerator.Generate(typeSpecContent);
             
             // Parse the C# code using Roslyn
-            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(content);
+            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(generatedCode);
             CSharpCompilation compilation = CSharpCompilation.Create(
                 "TestAssembly",
                 new[] { syntaxTree },
@@ -63,9 +61,6 @@ namespace Azure.Core.Pole.Tests
             IPropertySymbol? isMaleProperty = members.OfType<IPropertySymbol>().FirstOrDefault(p => p.Name == "IsMale");
             Assert.IsNotNull(isMaleProperty, "IsMale property should exist");
             Assert.AreEqual("Boolean", isMaleProperty!.Type.Name, "IsMale property should be of type Boolean");
-            
-            // Cleanup
-            Directory.Delete(destination, true);
         }
     }
 }
