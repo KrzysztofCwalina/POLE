@@ -95,6 +95,7 @@ namespace Azure.Core.Pole.Tooling
             {
                 "string" => "string",
                 "int32" => "int",
+                "uint8" => "byte",
                 "boolean" => "bool",
                 _ => null // Unsupported type
             };
