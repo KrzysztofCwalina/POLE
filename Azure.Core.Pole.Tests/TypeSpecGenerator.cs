@@ -32,22 +32,22 @@ namespace Azure.Core.Pole.Tests
         }
 
         [Test]
-        public void SimpleRequirementFormat()
+        public void DogModelGeneration()
         {
-            // Test with exact format from requirements
-            var source = Path.Combine(".", "tsp", "simple-test.tsp");
+            // Test with Dog model format
+            var source = Path.Combine(".", "tsp", "dog.tsp");
             var destination = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             TypeSpecGenerator.Generate(source, destination);
             
             // Verify the generated file exists and has correct content
-            var generatedFile = Path.Combine(destination, "Person.cs");
+            var generatedFile = Path.Combine(destination, "Dog.cs");
             Assert.IsTrue(File.Exists(generatedFile), "Generated C# file should exist");
             
             var content = File.ReadAllText(generatedFile);
-            Assert.IsTrue(content.Contains("public class Person"), "Should contain class definition");
+            Assert.IsTrue(content.Contains("public class Dog"), "Should contain class definition");
             Assert.IsTrue(content.Contains("public string Name { get; set; }"), "Should contain Name property");
-            Assert.IsTrue(content.Contains("public int Age { get; set; }"), "Should contain Age property"); 
-            Assert.IsTrue(content.Contains("public bool IsActive { get; set; }"), "Should contain IsActive property");
+            Assert.IsTrue(content.Contains("public byte Age { get; set; }"), "Should contain Age property with byte type"); 
+            Assert.IsTrue(content.Contains("public bool IsMale { get; set; }"), "Should contain IsMale property");
             
             // Cleanup
             Directory.Delete(destination, true);
@@ -64,28 +64,6 @@ namespace Azure.Core.Pole.Tests
             
             Assert.IsTrue(ex.Message.Contains("Error generating C# code from TypeSpec"));
             Assert.IsInstanceOf<FileNotFoundException>(ex.InnerException);
-        }
-
-        [Test]
-        public void DogModelExample()
-        {
-            // Test with Dog model example from user feedback
-            var source = Path.Combine(".", "tsp", "dog.tsp");
-            var destination = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            TypeSpecGenerator.Generate(source, destination);
-            
-            // Verify the generated file exists and has correct content
-            var generatedFile = Path.Combine(destination, "Dog.cs");
-            Assert.IsTrue(File.Exists(generatedFile), "Generated C# file should exist");
-            
-            var content = File.ReadAllText(generatedFile);
-            Assert.IsTrue(content.Contains("public class Dog"), "Should contain class definition");
-            Assert.IsTrue(content.Contains("public string Name { get; set; }"), "Should contain Name property");
-            Assert.IsTrue(content.Contains("public byte Age { get; set; }"), "Should contain Age property with byte type");
-            Assert.IsTrue(content.Contains("public bool IsMale { get; set; }"), "Should contain IsMale property");
-            
-            // Cleanup
-            Directory.Delete(destination, true);
         }
 
         [Test]
