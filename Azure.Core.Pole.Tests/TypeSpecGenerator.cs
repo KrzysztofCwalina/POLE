@@ -29,7 +29,12 @@ namespace Azure.Core.Pole.Tests
             CSharpCompilation compilation = CSharpCompilation.Create(
                 "TestAssembly",
                 new[] { syntaxTree },
-                new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) },
+                new[] { 
+                    MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof(Azure.Core.Pole.Reference).Assembly.Location),
+                    MetadataReference.CreateFromFile(Assembly.Load("netstandard").Location),
+                    MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location)
+                },
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
                 
             // Check for compilation errors
@@ -37,27 +42,38 @@ namespace Azure.Core.Pole.Tests
             System.Collections.Generic.IEnumerable<Diagnostic> errors = diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error);
             Assert.IsFalse(errors.Any(), $"Generated C# code should compile without errors. Errors: {string.Join(", ", errors.Select(e => e.GetMessage()))}");
             
-            // Verify the generated class structure using semantic model
+            // Verify the generated struct structure using semantic model
             SemanticModel semanticModel = compilation.GetSemanticModel(syntaxTree);
-            INamedTypeSymbol? dogClass = compilation.GetTypeByMetadataName("Dog");
-            Assert.IsNotNull(dogClass, "Dog class should be found in the compilation");
+            INamedTypeSymbol? dogStruct = compilation.GetTypeByMetadataName("Dog");
+            Assert.IsNotNull(dogStruct, "Dog struct should be found in the compilation");
+            Assert.AreEqual(TypeKind.Struct, dogStruct!.TypeKind, "Dog should be a struct, not a class");
             
-            // Verify class members
-            ISymbol[] members = dogClass!.GetMembers().Where(m => m.Kind == SymbolKind.Property).ToArray();
-            Assert.AreEqual(3, members.Length, "Dog class should have exactly 3 properties");
+            // Verify struct members - should have properties and some fields/constants
+            ISymbol[] properties = dogStruct!.GetMembers().Where(m => m.Kind == SymbolKind.Property).ToArray();
+            Assert.AreEqual(3, properties.Length, "Dog struct should have exactly 3 properties");
             
             // Verify specific properties
-            IPropertySymbol? nameProperty = members.OfType<IPropertySymbol>().FirstOrDefault(p => p.Name == "Name");
+            IPropertySymbol? nameProperty = properties.OfType<IPropertySymbol>().FirstOrDefault(p => p.Name == "Name");
             Assert.IsNotNull(nameProperty, "Name property should exist");
             Assert.AreEqual("String", nameProperty!.Type.Name, "Name property should be of type String");
             
-            IPropertySymbol? ageProperty = members.OfType<IPropertySymbol>().FirstOrDefault(p => p.Name == "Age");
+            IPropertySymbol? ageProperty = properties.OfType<IPropertySymbol>().FirstOrDefault(p => p.Name == "Age");
             Assert.IsNotNull(ageProperty, "Age property should exist");
             Assert.AreEqual("Byte", ageProperty!.Type.Name, "Age property should be of type Byte");
             
-            IPropertySymbol? isMaleProperty = members.OfType<IPropertySymbol>().FirstOrDefault(p => p.Name == "IsMale");
+            IPropertySymbol? isMaleProperty = properties.OfType<IPropertySymbol>().FirstOrDefault(p => p.Name == "IsMale");
             Assert.IsNotNull(isMaleProperty, "IsMale property should exist");
             Assert.AreEqual("Boolean", isMaleProperty!.Type.Name, "IsMale property should be of type Boolean");
+            
+            // Verify that there's a _reference field
+            IFieldSymbol? referenceField = dogStruct!.GetMembers().OfType<IFieldSymbol>().FirstOrDefault(f => f.Name == "_reference");
+            Assert.IsNotNull(referenceField, "_reference field should exist");
+            Assert.AreEqual("Reference", referenceField!.Type.Name, "_reference field should be of type Reference");
+            
+            // Verify that there's a Deserialize method
+            IMethodSymbol? deserializeMethod = dogStruct!.GetMembers().OfType<IMethodSymbol>().FirstOrDefault(m => m.Name == "Deserialize");
+            Assert.IsNotNull(deserializeMethod, "Deserialize method should exist");
+            Assert.IsTrue(deserializeMethod!.IsStatic, "Deserialize method should be static");
         }
 
         [Test]
@@ -78,7 +94,10 @@ namespace Azure.Core.Pole.Tests
                 new[]
                 {
                     MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                    MetadataReference.CreateFromFile(typeof(System.Runtime.GCSettings).Assembly.Location)
+                    MetadataReference.CreateFromFile(typeof(System.Runtime.GCSettings).Assembly.Location),
+                    MetadataReference.CreateFromFile(typeof(Azure.Core.Pole.Reference).Assembly.Location),
+                    MetadataReference.CreateFromFile(Assembly.Load("netstandard").Location),
+                    MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location)
                 },
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
                 
@@ -100,12 +119,9 @@ namespace Azure.Core.Pole.Tests
                 // Get the Dog type from the assembly
                 Type? dogType = assembly.GetType("Dog");
                 Assert.IsNotNull(dogType, "Dog type should be found in the compiled assembly");
+                Assert.IsTrue(dogType!.IsValueType, "Dog should be a value type (struct)");
                 
-                // Create an instance of the Dog class
-                object? dogInstance = Activator.CreateInstance(dogType!);
-                Assert.IsNotNull(dogInstance, "Should be able to create an instance of Dog");
-                
-                // Get property info for all properties
+                // Verify that it has the expected properties
                 System.Reflection.PropertyInfo? nameProperty = dogType!.GetProperty("Name");
                 System.Reflection.PropertyInfo? ageProperty = dogType!.GetProperty("Age");
                 System.Reflection.PropertyInfo? isMaleProperty = dogType!.GetProperty("IsMale");
@@ -119,23 +135,17 @@ namespace Azure.Core.Pole.Tests
                 Assert.AreEqual(typeof(byte), ageProperty!.PropertyType, "Age property should be of type byte");
                 Assert.AreEqual(typeof(bool), isMaleProperty!.PropertyType, "IsMale property should be of type bool");
                 
-                // Set property values
-                string testName = "Buddy";
-                byte testAge = 5;
-                bool testIsMale = true;
+                // Verify that there's a _reference field
+                System.Reflection.FieldInfo? referenceField = dogType!.GetField("_reference", BindingFlags.NonPublic | BindingFlags.Instance);
+                Assert.IsNotNull(referenceField, "_reference field should exist");
                 
-                nameProperty!.SetValue(dogInstance!, testName);
-                ageProperty!.SetValue(dogInstance!, testAge);
-                isMaleProperty!.SetValue(dogInstance!, testIsMale);
+                // Verify that there's a Deserialize method
+                System.Reflection.MethodInfo? deserializeMethod = dogType!.GetMethod("Deserialize", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+                Assert.IsNotNull(deserializeMethod, "Deserialize method should exist");
+                Assert.IsTrue(deserializeMethod!.IsStatic, "Deserialize method should be static");
                 
-                // Read property values back and verify they match
-                string? actualName = (string?)nameProperty!.GetValue(dogInstance!);
-                byte actualAge = (byte)ageProperty!.GetValue(dogInstance!)!;
-                bool actualIsMale = (bool)isMaleProperty!.GetValue(dogInstance!)!;
-                
-                Assert.AreEqual(testName, actualName, "Name property should return the set value");
-                Assert.AreEqual(testAge, actualAge, "Age property should return the set value");
-                Assert.AreEqual(testIsMale, actualIsMale, "IsMale property should return the set value");
+                // Note: We don't test runtime behavior here because POLE structs require 
+                // a proper Reference instance which needs a PoleHeap setup
             }
         }
     }

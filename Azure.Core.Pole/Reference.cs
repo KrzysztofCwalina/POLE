@@ -41,6 +41,9 @@ namespace Azure.Core.Pole
         public void WriteUInt64(int offset, ulong value) => BinaryPrimitives.WriteUInt64LittleEndian(At(offset), value);
         public bool ReadBoolean(int offset) => At(offset)[0] != 0;
         public void WriteBoolean(int offset, bool value) => At(offset)[0] = value ? (byte)1 : (byte)0;
+        
+        public byte ReadByte(int offset) => At(offset)[0];
+        public void WriteByte(int offset, byte value) => At(offset)[0] = value;
 
         public ulong ReadTypeId() => BinaryPrimitives.ReadUInt64LittleEndian(_objectMemory.Span);
 
