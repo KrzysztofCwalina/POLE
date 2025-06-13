@@ -17,12 +17,9 @@ namespace Azure.Core.Pole.Tests
         [Test]
         public void DogModelGeneration()
         {
-            // Read the TypeSpec content directly
-            string typeSpecContent = @"model Dog {
-  name: string;
-  age: uint8;
-  isMale: boolean;
-}";
+            // Read the TypeSpec content from dog.tsp file
+            string tspFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "tsp", "dog.tsp");
+            string typeSpecContent = File.ReadAllText(tspFilePath);
             
             // Generate C# code in-memory
             string generatedCode = TypeSpecGenerator.Generate(typeSpecContent);
