@@ -63,22 +63,74 @@ namespace Azure.Core.Pole.Tooling
             StringBuilder sb = new StringBuilder();
             
             // Add file header comment
-            sb.AppendLine("// Generated C# class from TypeSpec model");
+            sb.AppendLine("// Generated C# POLE model from TypeSpec");
             sb.AppendLine();
             
-            // Generate class definition
-            sb.AppendLine($"public class {modelInfo.Name}");
+            // Add using directives
+            sb.AppendLine("using Azure.Core.Pole;");
+            sb.AppendLine("using System;");
+            sb.AppendLine();
+            
+            // Generate struct definition
+            sb.AppendLine($"public struct {modelInfo.Name}");
             sb.AppendLine("{");
+            
+            // Generate private reference field
+            sb.AppendLine("    private readonly Reference _reference;");
+            sb.AppendLine($"    private {modelInfo.Name}(Reference reference) => _reference = reference;");
+            sb.AppendLine();
+            
+            // Generate offset constants
+            int offset = 0;
+            foreach (PropertyInfo property in modelInfo.Properties)
+            {
+                sb.AppendLine($"    const int __{property.Name}Offset = {offset};");
+                offset += GetTypeSize(property.Type);
+            }
+            sb.AppendLine($"    const int __Size = {offset};");
+            sb.AppendLine();
+            
+            // Generate Deserialize method
+            sb.AppendLine($"    internal static {modelInfo.Name} Deserialize(Reference reference) => new(reference);");
+            sb.AppendLine();
             
             // Generate properties
             foreach (PropertyInfo property in modelInfo.Properties)
             {
-                sb.AppendLine($"    public {property.Type} {property.Name} {{ get; set; }}");
+                sb.AppendLine($"    public {property.Type} {property.Name}");
+                sb.AppendLine("    {");
+                sb.AppendLine($"        get => _reference.Read{GetReadWriteMethodName(property.Type)}(__{property.Name}Offset);");
+                sb.AppendLine($"        set => _reference.Write{GetReadWriteMethodName(property.Type)}(__{property.Name}Offset, value);");
+                sb.AppendLine("    }");
             }
             
             sb.AppendLine("}");
             
             return sb.ToString();
+        }
+        
+        private static int GetTypeSize(string type)
+        {
+            return type switch
+            {
+                "string" => 4,
+                "int" => 4,
+                "bool" => 1,
+                "byte" => 1,
+                _ => throw new NotSupportedException($"Type {type} is not supported")
+            };
+        }
+        
+        private static string GetReadWriteMethodName(string type)
+        {
+            return type switch
+            {
+                "string" => "String",
+                "int" => "Int32", 
+                "bool" => "Boolean",
+                "byte" => "Byte",
+                _ => throw new NotSupportedException($"Type {type} is not supported")
+            };
         }
     }
 }
